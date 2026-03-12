@@ -1,16 +1,51 @@
 import { Router } from 'express';
-import { login, register, profile } from '../controllers/authController';
-import { verifyToken, requireRole } from '../middleware/auth';
+import rateLimit from 'express-rate-limit';
+import { body } from 'express-validator';
+import { login, register, profile, refreshToken, logout } from '../controllers/authController';
+import { authMiddleware, requireRole } from '../middleware/auth';
+import { validationResultHandler } from './validationHelpers';
 
 const router = Router();
 
+// Rate limiter for login to mitigate brute force
+const loginLimiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 10,
+	standardHeaders: true,
+	legacyHeaders: false
+});
+
 // Student login (also usable by staff/admin)
-router.post('/login', login);
+router.post(
+	'/login',
+	loginLimiter,
+	[body('email').isEmail().normalizeEmail(), body('password').isString().trim().escape()],
+	validationResultHandler,
+	login
+);
 
 // Register new users - only staff or admin can create users
-router.post('/register', verifyToken, requireRole(['staff', 'admin']), register);
+router.post(
+	'/register',
+	authMiddleware,
+	requireRole(['staff', 'admin']),
+	[
+		body('name').isString().trim().escape(),
+		body('studentId').isString().trim().escape(),
+		body('email').isEmail().normalizeEmail(),
+		body('password').isLength({ min: 8 })
+	],
+	validationResultHandler,
+	register
+);
 
 // Profile for logged-in user
-router.get('/profile', verifyToken, profile);
+router.get('/profile', authMiddleware, profile);
+
+// Refresh token endpoint
+router.post('/refresh', [body('refreshToken').isString().trim()], validationResultHandler, refreshToken);
+
+// Logout (revoke refresh token)
+router.post('/logout', authMiddleware, logout);
 
 export default router;
