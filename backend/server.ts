@@ -10,6 +10,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db';
 import testRoutes from './routes/test';
+import authRoutes from './routes/auth';
+import { errorHandler } from './middleware/errorHandler';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -29,6 +31,12 @@ app.use(cors());
 // Register routes
 // Mounts the test route at /api/test
 app.use('/api/test', testRoutes);
+
+// Authentication routes mounted at /api/auth
+app.use('/api/auth', authRoutes);
+
+// Global error handler
+app.use(errorHandler);
 
 // Export the app for testing purposes
 export default app;
