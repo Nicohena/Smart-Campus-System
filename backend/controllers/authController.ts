@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User, { IUser } from '../models/User';
 
-// Load JWT secret from environment
-const JWT_SECRET = process.env.JWT_SECRET ;
+// Load JWT secret from environment (provide a fallback for development)
+const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret';
 
 // POST /api/auth/register
 // Creates a new user. Only staff/admin should be allowed to call this route
