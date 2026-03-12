@@ -10,6 +10,9 @@ export interface IUser extends Document {
   role: 'student' | 'staff' | 'admin';
   department?: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
+  // Optional refresh token fields for token renewal
+  refreshToken?: string | null;
+  refreshTokenExpiry?: Date | null;
 }
 
 // Mongoose schema for users
