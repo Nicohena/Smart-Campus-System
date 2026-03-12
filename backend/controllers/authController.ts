@@ -16,7 +16,7 @@ if (!JWT_SECRET) {
 }
 
 const ACCESS_TOKEN_EXPIRES = process.env.ACCESS_TOKEN_EXPIRES || '1d';
-const signAccessToken = (payload: object) => jwt.sign(payload, JWT_SECRET as string, { expiresIn: ACCESS_TOKEN_EXPIRES });
+const signAccessToken = (payload: object) => jwt.sign(payload, JWT_SECRET as string, { expiresIn: ACCESS_TOKEN_EXPIRES as any });
 
 // Helper to create a refresh token (random string) and expiry
 const generateRefreshToken = () => {
