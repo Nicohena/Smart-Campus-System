@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import User, { IUser } from '../models/User';
+import RefreshToken from '../models/RefreshToken';
 import { sendSuccess, sendError } from '../utils/response';
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -14,7 +15,8 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
-const signAccessToken = (payload: object) => jwt.sign(payload, JWT_SECRET as string, { expiresIn: '1d' });
+const ACCESS_TOKEN_EXPIRES = process.env.ACCESS_TOKEN_EXPIRES || '1d';
+const signAccessToken = (payload: object) => jwt.sign(payload, JWT_SECRET as string, { expiresIn: ACCESS_TOKEN_EXPIRES });
 
 // Helper to create a refresh token (random string) and expiry
 const generateRefreshToken = () => {
@@ -81,16 +83,23 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const payload = { id: user._id.toString(), role: user.role };
     const token = signAccessToken(payload);
 
-    // Generate refresh token and persist to user
+    // Generate refresh token and persist to RefreshToken collection
     const { token: refreshTok, expires } = generateRefreshToken();
-    user.refreshToken = refreshTok;
-    user.refreshTokenExpiry = expires;
-    await user.save();
+    await RefreshToken.create({ user: user._id, token: refreshTok, expires });
+
+    // Set refresh token as secure httpOnly cookie
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      expires
+    };
+    res.cookie('refreshToken', refreshTok, cookieOptions);
 
     const userObj = user.toObject();
     delete (userObj as any).password;
 
-    sendSuccess(res, 'Login successful', { token, refreshToken: refreshTok, user: userObj });
+    sendSuccess(res, 'Login successful', { token, user: userObj });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Login error:', error);
@@ -102,21 +111,44 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 // Exchange a refresh token for a new access token
 export const refreshToken = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { refreshToken } = req.body;
-    if (!refreshToken) {
+    // Accept refresh token from body or cookie
+    const incoming = (req.body && req.body.refreshToken) || req.cookies?.refreshToken;
+    if (!incoming) {
       sendError(res, 'Refresh token required', 400);
       return;
     }
 
-    // Find user with this refresh token
-    const user = await User.findOne({ refreshToken });
-    if (!user || !user.refreshTokenExpiry || user.refreshTokenExpiry < new Date()) {
+    // Find refresh token doc and populate user
+    const tokenDoc = await RefreshToken.findOne({ token: incoming }).populate('user');
+    if (
+      !tokenDoc ||
+      tokenDoc.revoked ||
+      !tokenDoc.expires ||
+      (tokenDoc.expires && tokenDoc.expires < new Date())
+    ) {
       sendError(res, 'Invalid or expired refresh token', 401);
       return;
     }
 
+    const user = (tokenDoc.user as any);
     const payload = { id: user._id.toString(), role: user.role };
     const token = signAccessToken(payload);
+
+    // Rotate refresh token: revoke old and issue a new one
+    const { token: newRefreshTok, expires } = generateRefreshToken();
+    const newTokenDoc = await RefreshToken.create({ user: user._id, token: newRefreshTok, expires });
+
+    tokenDoc.revoked = true;
+    tokenDoc.replacedByToken = newTokenDoc._id;
+    await tokenDoc.save();
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      expires
+    };
+    res.cookie('refreshToken', newRefreshTok, cookieOptions);
 
     sendSuccess(res, 'Token refreshed', { token });
   } catch (error) {
@@ -135,16 +167,20 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
       sendError(res, 'Unauthorized', 401);
       return;
     }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      sendError(res, 'User not found', 404);
-      return;
+    // Revoke a specific refresh token passed in body or cookie, else revoke all for the user
+    const incoming = (req.body && req.body.refreshToken) || req.cookies?.refreshToken;
+    if (incoming) {
+      const tokenDoc = await RefreshToken.findOne({ token: incoming, user: userId });
+      if (tokenDoc) {
+        tokenDoc.revoked = true;
+        await tokenDoc.save();
+      }
+    } else {
+      await RefreshToken.updateMany({ user: userId, revoked: false }, { revoked: true });
     }
 
-    user.refreshToken = null;
-    user.refreshTokenExpiry = null;
-    await user.save();
+    // Clear refresh token cookie
+    res.clearCookie('refreshToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' });
 
     sendSuccess(res, 'Logged out');
   } catch (error) {

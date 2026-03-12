@@ -7,6 +7,7 @@
 
 import express, { Application } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import connectDB from './config/db';
 import authRoutes from './routes/auth';
@@ -23,6 +24,8 @@ connectDB();
 // Basic middleware
 // Parse incoming JSON requests
 app.use(express.json());
+// Parse cookies for refresh token handling
+app.use(cookieParser());
 // Enable CORS for cross-origin requests
 app.use(cors());
 
