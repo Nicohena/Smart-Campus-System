@@ -9,7 +9,6 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db';
-import testRoutes from './routes/test';
 import authRoutes from './routes/auth';
 import { errorHandler } from './middleware/errorHandler';
 
@@ -29,9 +28,6 @@ app.use(express.json());
 app.use(cors());
 
 // Register routes
-// Mounts the test route at /api/test
-app.use('/api/test', testRoutes);
-
 // Authentication routes mounted at /api/auth
 app.use('/api/auth', authRoutes);
 
