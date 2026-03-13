@@ -1,13 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-// Ensure JWT_SECRET exists at runtime - fail early if not provided
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  // eslint-disable-next-line no-console
-  console.error('JWT_SECRET is not defined in environment. Exiting.');
-  process.exit(1);
-}
+import { config } from '../config';
 
 // Type augmentation for request `user` (simple shape)
 export interface JwtPayload {
@@ -15,6 +9,15 @@ export interface JwtPayload {
   role: 'student' | 'staff' | 'admin';
   iat?: number;
   exp?: number;
+}
+
+// Globally extend Express Request
+declare global {
+  namespace Express {
+    interface Request {
+      user?: JwtPayload;
+    }
+  }
 }
 
 // Middleware to verify JWT token and attach user payload to request
@@ -27,8 +30,8 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
   }
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    (req as any).user = payload;
+    const payload = jwt.verify(token, config.jwt.secret) as JwtPayload;
+    req.user = payload;
     next();
   } catch (err) {
     res.status(401).json({ success: false, message: 'Invalid token' });
@@ -38,8 +41,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
 // Middleware factory for role-based authorization
 export const requireRole = (allowedRoles: Array<'student' | 'staff' | 'admin'>) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const user = (req as any).user as JwtPayload | undefined;
-    if (!user || !allowedRoles.includes(user.role)) {
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
       res.status(403).json({ success: false, message: 'Forbidden' });
       return;
     }

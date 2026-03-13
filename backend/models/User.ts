@@ -9,10 +9,7 @@ export interface IUser extends Document {
   password: string;
   role: 'student' | 'staff' | 'admin';
   department?: string;
-  refreshToken?: string | null;
-  refreshTokenExpiry?: Date | null;
   comparePassword(candidatePassword: string): Promise<boolean>;
-  // password compare method
 }
 
 // Mongoose schema for users
@@ -24,9 +21,6 @@ const UserSchema: Schema<IUser> = new Schema(
     password: { type: String, required: true },
     role: { type: String, enum: ['student', 'staff', 'admin'], default: 'student' },
     department: { type: String }
-    ,
-    refreshToken: { type: String, default: null },
-    refreshTokenExpiry: { type: Date, default: null }
   },
   { timestamps: true }
 );

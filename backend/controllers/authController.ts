@@ -1,30 +1,9 @@
 import { Request, Response } from 'express';
-import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
 import User, { IUser } from '../models/User';
 import RefreshToken from '../models/RefreshToken';
 import { sendSuccess, sendError } from '../utils/response';
-
-const JWT_SECRET = process.env.JWT_SECRET;
-const REFRESH_TOKEN_EXPIRY_DAYS = Number(process.env.REFRESH_TOKEN_EXPIRY_DAYS) || 7;
-
-if (!JWT_SECRET) {
-  // Fail fast - JWT secret must be provided for security
-  // eslint-disable-next-line no-console
-  console.error('JWT_SECRET not set. Set JWT_SECRET in environment.');
-  process.exit(1);
-}
-
-const ACCESS_TOKEN_EXPIRES = process.env.ACCESS_TOKEN_EXPIRES || '1d';
-const signAccessToken = (payload: object) => jwt.sign(payload, JWT_SECRET as string, { expiresIn: ACCESS_TOKEN_EXPIRES as any });
-
-// Helper to create a refresh token (random string) and expiry
-const generateRefreshToken = () => {
-  const token = crypto.randomBytes(48).toString('hex');
-  const expires = new Date();
-  expires.setDate(expires.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
-  return { token, expires };
-};
+import { config } from '../config';
+import { signAccessToken, generateRefreshToken } from '../utils/tokenService';
 
 // POST /api/auth/register
 // Creates a new user. Only staff/admin should be allowed to call this route
@@ -90,7 +69,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // Set refresh token as secure httpOnly cookie
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: config.isProduction,
       sameSite: 'lax' as const,
       expires
     };
@@ -144,7 +123,7 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
 
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: config.isProduction,
       sameSite: 'lax' as const,
       expires
     };
@@ -162,7 +141,7 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
 // Revoke refresh token
 export const logout = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     if (!userId) {
       sendError(res, 'Unauthorized', 401);
       return;
@@ -180,7 +159,11 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Clear refresh token cookie
-    res.clearCookie('refreshToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' });
+    res.clearCookie('refreshToken', { 
+      httpOnly: true, 
+      secure: config.isProduction, 
+      sameSite: 'lax' 
+    });
 
     sendSuccess(res, 'Logged out');
   } catch (error) {
@@ -194,13 +177,13 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
 // Returns the current logged-in user's profile
 export const profile = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     if (!userId) {
       sendError(res, 'Unauthorized', 401);
       return;
     }
 
-    const user = await User.findById(userId).select('-password -refreshToken -refreshTokenExpiry');
+    const user = await User.findById(userId).select('-password');
     if (!user) {
       sendError(res, 'User not found', 404);
       return;
