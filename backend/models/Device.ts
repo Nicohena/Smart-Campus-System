@@ -1,9 +1,9 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 export type DeviceType = 'laptop' | 'tablet' | 'other';
 export type DeviceStatus = 'registered' | 'active' | 'blocked';
 
-export interface IDevice extends Document {
+export interface IDevice {
   student: mongoose.Types.ObjectId;
   studentId: string;
   phoneNumber: string;
