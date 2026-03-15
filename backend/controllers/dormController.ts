@@ -146,10 +146,18 @@ export const issueDormKey = async (req: Request, res: Response): Promise<void> =
       sendError(res, 'Dorm not found', 404);
       return;
     }
+    if (dorm.status === 'maintenance') {
+      sendError(res, 'Cannot issue key for dorm under maintenance', 400);
+      return;
+    }
 
     const student = await User.findById(issuedTo);
     if (!student) {
       sendError(res, 'Student not found', 404);
+      return;
+    }
+    if (!dorm.students.some((studentRef) => studentRef.toString() === issuedTo)) {
+      sendError(res, 'Student is not assigned to this dorm', 400);
       return;
     }
 
