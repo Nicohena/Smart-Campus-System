@@ -126,6 +126,10 @@ export const updateStampStatus = async (req: Request, res: Response): Promise<vo
       sendError(res, 'Lost ID request not found', 404);
       return;
     }
+    if (request.status === 'rejected' || request.status === 'completed') {
+      sendError(res, 'Cannot update stamps for a closed request', 400);
+      return;
+    }
 
     request.stamps = { ...request.stamps, ...updates } as LostIdStamps;
     await request.save();
@@ -146,6 +150,14 @@ export const approveLostIdRequest = async (req: Request, res: Response): Promise
     const request = await LostID.findById(id);
     if (!request) {
       sendError(res, 'Lost ID request not found', 404);
+      return;
+    }
+    if (request.status === 'rejected' || request.status === 'completed') {
+      sendError(res, 'Cannot approve a closed request', 400);
+      return;
+    }
+    if (request.status === 'approved') {
+      sendError(res, 'Request is already approved', 400);
       return;
     }
 
@@ -181,6 +193,10 @@ export const rejectLostIdRequest = async (req: Request, res: Response): Promise<
       sendError(res, 'Lost ID request not found', 404);
       return;
     }
+    if (request.status === 'completed') {
+      sendError(res, 'Cannot reject a completed request', 400);
+      return;
+    }
 
     request.status = 'rejected';
     request.remarks = remarks.trim();
@@ -202,6 +218,10 @@ export const issueTemporaryId = async (req: Request, res: Response): Promise<voi
     const request = await LostID.findById(id);
     if (!request) {
       sendError(res, 'Lost ID request not found', 404);
+      return;
+    }
+    if (request.status === 'rejected') {
+      sendError(res, 'Cannot issue temporary ID for a rejected request', 400);
       return;
     }
 
