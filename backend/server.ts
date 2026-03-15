@@ -15,6 +15,7 @@ import lostIdRoutes from './routes/lostIdRoutes';
 import clearanceRoutes from './routes/clearanceRoutes';
 import dormRoutes from './routes/dormRoutes';
 import issueRoutes from './routes/issueRoutes';
+import complaintRoutes from './routes/complaintRoutes';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -40,6 +41,7 @@ app.use('/api/lost-id', lostIdRoutes);
 app.use('/api/clearance', clearanceRoutes);
 app.use('/api/dorm', dormRoutes);
 app.use('/api/issues', issueRoutes);
+app.use('/api/complaints', complaintRoutes);
 
 // (No global error handler middleware - removed per cleanup request)
 
