@@ -108,6 +108,16 @@ export const assignTechnician = async (req: Request, res: Response): Promise<voi
       sendError(res, 'Issue not found', 404);
       return;
     }
+    if (issue.status !== 'reported') {
+      sendError(res, 'Only reported issues can be assigned', 400);
+      return;
+    }
+
+    const technician = await User.findById(assignedTechnician).select('role');
+    if (!technician) {
+      sendError(res, 'Technician not found', 404);
+      return;
+    }
 
     issue.assignedTechnician = new mongoose.Types.ObjectId(assignedTechnician);
     issue.status = 'assigned';
