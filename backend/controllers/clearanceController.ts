@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Clearance, { IClearance } from '../models/Clearance';
 import User from '../models/User';
 import { sendSuccess, sendError } from '../utils/response';
@@ -144,7 +145,7 @@ const markApproval = async (
 
   clearance[section] = {
     status: true,
-    approvedBy: approverId,
+    approvedBy: new mongoose.Types.ObjectId(approverId),
     date: new Date()
   };
 
