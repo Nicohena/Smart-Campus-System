@@ -142,6 +142,10 @@ export const updateIssueStatus = async (req: Request, res: Response): Promise<vo
       sendError(res, 'status is required', 400);
       return;
     }
+    if (!['in_progress', 'resolved', 'closed'].includes(status)) {
+      sendError(res, 'Invalid status update', 400);
+      return;
+    }
 
     const issue = await Issue.findById(id);
     if (!issue) {
@@ -149,11 +153,27 @@ export const updateIssueStatus = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    issue.status = status;
+    // Enforce status progression: assigned -> in_progress -> resolved -> closed
+    const current = issue.status;
+    const next = status;
+    const isValidTransition =
+      (current === 'assigned' && next === 'in_progress') ||
+      (current === 'in_progress' && next === 'resolved') ||
+      (current === 'resolved' && next === 'closed');
+
+    if (!isValidTransition) {
+      sendError(res, `Invalid status transition from ${current} to ${next}`, 400);
+      return;
+    }
+
+    issue.status = next;
     if (remarks) {
       issue.remarks = remarks.trim();
     }
-    if (status === 'resolved') {
+    if (next === 'resolved') {
+      issue.resolvedAt = new Date();
+    }
+    if (next === 'closed' && !issue.resolvedAt) {
       issue.resolvedAt = new Date();
     }
     await issue.save();
