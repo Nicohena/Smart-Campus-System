@@ -151,6 +151,16 @@ export const assignComplaintHandler = async (req: Request, res: Response): Promi
       sendError(res, 'Complaint not found', 404);
       return;
     }
+    if (complaint.status === 'resolved' || complaint.status === 'rejected') {
+      sendError(res, 'Cannot assign handler to a closed complaint', 400);
+      return;
+    }
+
+    const handler = await User.findById(handledBy).select('role');
+    if (!handler) {
+      sendError(res, 'Handler not found', 404);
+      return;
+    }
 
     complaint.handledBy = new mongoose.Types.ObjectId(handledBy);
     await complaint.save();
@@ -174,10 +184,18 @@ export const setComplaintPriority = async (req: Request, res: Response): Promise
       sendError(res, 'priority is required', 400);
       return;
     }
+    if (!['low', 'medium', 'high'].includes(priority)) {
+      sendError(res, 'Invalid priority', 400);
+      return;
+    }
 
     const complaint = await Complaint.findById(id);
     if (!complaint) {
       sendError(res, 'Complaint not found', 404);
+      return;
+    }
+    if (complaint.status === 'resolved' || complaint.status === 'rejected') {
+      sendError(res, 'Cannot change priority for a closed complaint', 400);
       return;
     }
 
