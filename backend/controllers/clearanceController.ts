@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Clearance, { IClearance } from '../models/Clearance';
+import Dorm from '../models/Dorm';
+import DormInspection from '../models/DormInspection';
 import User from '../models/User';
 import { sendSuccess, sendError } from '../utils/response';
 
@@ -132,6 +134,30 @@ const markApproval = async (
   ) {
     sendError(res, 'Library and cafeteria approvals are required before proctor approval', 400);
     return;
+  }
+  if (section === 'proctorApproval') {
+    // Dorm inspection must be approved before proctor approval
+    const dorm = await Dorm.findOne({ students: clearance.student }).select('_id');
+    if (!dorm) {
+      sendError(res, 'Student dorm not found for inspection', 400);
+      return;
+    }
+
+    const latestInspection = await DormInspection.findOne({ dorm: dorm._id }).sort({
+      inspectionDate: -1
+    });
+    if (!latestInspection) {
+      sendError(res, 'Dorm inspection is required before proctor approval', 400);
+      return;
+    }
+    if (!latestInspection.approved) {
+      sendError(res, 'Dorm inspection is not approved', 400);
+      return;
+    }
+    if (latestInspection.damages && latestInspection.damages.trim().length > 0) {
+      sendError(res, 'Dorm damages must be resolved before proctor approval', 400);
+      return;
+    }
   }
   if (
     section === 'securityApproval' &&
