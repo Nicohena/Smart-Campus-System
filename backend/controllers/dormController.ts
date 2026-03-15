@@ -242,6 +242,26 @@ export const inspectDorm = async (req: Request, res: Response): Promise<void> =>
       sendError(res, 'dormId, conditions, cleanliness, and approved are required', 400);
       return;
     }
+    const conditionKeys = [
+      'windows',
+      'bed',
+      'locker',
+      'table',
+      'chair',
+      'lightBulb',
+      'doorLock'
+    ] as const;
+    const hasAllConditions = conditionKeys.every(
+      (key) => typeof conditions[key] === 'boolean'
+    );
+    if (!hasAllConditions) {
+      sendError(res, 'All condition fields must be provided as booleans', 400);
+      return;
+    }
+    if (damages && damages.trim().length > 0 && approved) {
+      sendError(res, 'Inspection cannot be approved when damages are reported', 400);
+      return;
+    }
 
     const dorm = await Dorm.findById(dormId);
     if (!dorm) {
