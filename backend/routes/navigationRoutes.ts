@@ -34,6 +34,7 @@ router.get(
   validationResultHandler,
   getLocationsByCategory
 );
+router.get('/category/:category', authMiddleware, [param('category').isString().trim()], validationResultHandler, getLocationsByCategory);
 router.get('/:id', authMiddleware, [param('id').isMongoId()], validationResultHandler, getLocationById);
 
 // Admin/Staff routes

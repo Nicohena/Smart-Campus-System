@@ -128,6 +128,7 @@ export const getAllLocations = async (req: Request, res: Response): Promise<void
 
 // GET /api/navigation/search
 // Students search by name, category, or building
+// Students search by name or category
 export const searchLocations = async (req: Request, res: Response): Promise<void> => {
   try {
     const { q, category, building } = req.query as {
