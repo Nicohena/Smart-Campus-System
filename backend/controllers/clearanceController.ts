@@ -120,6 +120,28 @@ const markApproval = async (
     return;
   }
 
+  // Enforce approval order: Library -> Cafeteria -> Proctor -> Security
+  if (section === 'cafeteriaApproval' && !clearance.libraryApproval.status) {
+    sendError(res, 'Library approval is required before cafeteria approval', 400);
+    return;
+  }
+  if (
+    section === 'proctorApproval' &&
+    (!clearance.libraryApproval.status || !clearance.cafeteriaApproval.status)
+  ) {
+    sendError(res, 'Library and cafeteria approvals are required before proctor approval', 400);
+    return;
+  }
+  if (
+    section === 'securityApproval' &&
+    (!clearance.libraryApproval.status ||
+      !clearance.cafeteriaApproval.status ||
+      !clearance.proctorApproval.status)
+  ) {
+    sendError(res, 'All prior approvals are required before security approval', 400);
+    return;
+  }
+
   clearance[section] = {
     status: true,
     approvedBy: approverId,
