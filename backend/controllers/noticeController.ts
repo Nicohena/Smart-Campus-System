@@ -162,7 +162,12 @@ export const setNoticeStatus = async (req: Request, res: Response): Promise<void
 // Students view active notices
 export const getAllNotices = async (req: Request, res: Response): Promise<void> => {
   try {
-    const notices = await Notice.find().sort({ createdAt: -1 });
+    const now = new Date();
+    const notices = await Notice.find({
+      status: 'active',
+      $or: [{ expiryDate: { $exists: false } }, { expiryDate: null }, { expiryDate: { $gt: now } }],
+      targetAudience: 'all_students'
+    }).sort({ createdAt: -1 });
     sendSuccess(res, 'Notices fetched', { notices });
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -176,7 +181,12 @@ export const getAllNotices = async (req: Request, res: Response): Promise<void> 
 export const getNoticeById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const notice = await Notice.findById(id);
+    const now = new Date();
+    const notice = await Notice.findOne({
+      _id: id,
+      status: 'active',
+      $or: [{ expiryDate: { $exists: false } }, { expiryDate: null }, { expiryDate: { $gt: now } }]
+    });
     if (!notice) {
       sendError(res, 'Notice not found', 404);
       return;
@@ -195,7 +205,15 @@ export const getNoticeById = async (req: Request, res: Response): Promise<void> 
 export const getDepartmentNotices = async (req: Request, res: Response): Promise<void> => {
   try {
     const { department } = req.params;
-    const notices = await Notice.find({ department }).sort({ createdAt: -1 });
+    const now = new Date();
+    const notices = await Notice.find({
+      status: 'active',
+      $or: [{ expiryDate: { $exists: false } }, { expiryDate: null }, { expiryDate: { $gt: now } }],
+      $or: [
+        { targetAudience: 'all_students' },
+        { targetAudience: 'department_students', department }
+      ]
+    }).sort({ createdAt: -1 });
     sendSuccess(res, 'Department notices fetched', { notices });
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -209,7 +227,12 @@ export const getDepartmentNotices = async (req: Request, res: Response): Promise
 export const getDormNotices = async (req: Request, res: Response): Promise<void> => {
   try {
     const { block } = req.params;
-    const notices = await Notice.find({ dormBlock: block }).sort({ createdAt: -1 });
+    const now = new Date();
+    const notices = await Notice.find({
+      status: 'active',
+      $or: [{ expiryDate: { $exists: false } }, { expiryDate: null }, { expiryDate: { $gt: now } }],
+      $or: [{ targetAudience: 'all_students' }, { targetAudience: 'dorm_students', dormBlock: block }]
+    }).sort({ createdAt: -1 });
     sendSuccess(res, 'Dorm notices fetched', { notices });
   } catch (error) {
     // eslint-disable-next-line no-console
