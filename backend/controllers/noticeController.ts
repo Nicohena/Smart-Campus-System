@@ -208,10 +208,20 @@ export const getDepartmentNotices = async (req: Request, res: Response): Promise
     const now = new Date();
     const notices = await Notice.find({
       status: 'active',
-      $or: [{ expiryDate: { $exists: false } }, { expiryDate: null }, { expiryDate: { $gt: now } }],
-      $or: [
-        { targetAudience: 'all_students' },
-        { targetAudience: 'department_students', department }
+      $and: [
+        {
+          $or: [
+            { expiryDate: { $exists: false } },
+            { expiryDate: null },
+            { expiryDate: { $gt: now } }
+          ]
+        },
+        {
+          $or: [
+            { targetAudience: 'all_students' },
+            { targetAudience: 'department_students', department }
+          ]
+        }
       ]
     }).sort({ createdAt: -1 });
     sendSuccess(res, 'Department notices fetched', { notices });
@@ -230,8 +240,21 @@ export const getDormNotices = async (req: Request, res: Response): Promise<void>
     const now = new Date();
     const notices = await Notice.find({
       status: 'active',
-      $or: [{ expiryDate: { $exists: false } }, { expiryDate: null }, { expiryDate: { $gt: now } }],
-      $or: [{ targetAudience: 'all_students' }, { targetAudience: 'dorm_students', dormBlock: block }]
+      $and: [
+        {
+          $or: [
+            { expiryDate: { $exists: false } },
+            { expiryDate: null },
+            { expiryDate: { $gt: now } }
+          ]
+        },
+        {
+          $or: [
+            { targetAudience: 'all_students' },
+            { targetAudience: 'dorm_students', dormBlock: block }
+          ]
+        }
+      ]
     }).sort({ createdAt: -1 });
     sendSuccess(res, 'Dorm notices fetched', { notices });
   } catch (error) {
