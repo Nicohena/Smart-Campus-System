@@ -178,3 +178,24 @@ export const getDeviceById = async (req: Request, res: Response): Promise<void> 
     sendError(res, 'Could not fetch device');
   }
 };
+
+export const deleteDeviceById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { id } = req.params;
+    if (!userId) {
+      sendError(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const device = await Device.findOneAndDelete({ _id: id, student: userId });
+    if (!device) {
+      sendError(res, 'Device not found', 404);
+      return;
+    }
+
+    sendSuccess(res, 'Device deleted');
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Delete device by id error:', error);
+    sendError(res, 'Could not delete device');}}
