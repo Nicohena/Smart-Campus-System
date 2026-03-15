@@ -19,6 +19,7 @@ import complaintRoutes from './routes/complaintRoutes';
 import noticeRoutes from './routes/noticeRoutes';
 import deviceRoutes from './routes/deviceRoutes';
 import navigationRoutes from './routes/navigationRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -48,6 +49,7 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/devices', deviceRoutes);
 app.use('/api/navigation', navigationRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // (No global error handler middleware - removed per cleanup request)
 
