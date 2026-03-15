@@ -5,7 +5,8 @@ import {
   getAllDevices,
   blockDevice,
   getMyDevices,
-  getDeviceById
+  getDeviceById,
+  deleteDeviceById
 } from '../controllers/deviceController';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { validationResultHandler } from './validationHelpers';
@@ -45,5 +46,8 @@ router.patch(
   validationResultHandler,
   blockDevice
 );
+
+
+router.delete('/:id', authMiddleware, requireRole(['staff', 'admin']), [param('id').isMongoId()], validationResultHandler,deleteDeviceById);
 
 export default router;
