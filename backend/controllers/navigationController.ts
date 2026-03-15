@@ -130,17 +130,30 @@ export const getAllLocations = async (req: Request, res: Response): Promise<void
 // Students search by name or category
 export const searchLocations = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { q, category } = req.query as { q?: string; category?: string };
-    const filter: Record<string, any> = {};
+    const { q, category, building } = req.query as {
+      q?: string;
+      category?: string;
+      building?: string;
+    };
+    const filters: Record<string, any>[] = [];
 
     if (q) {
-      filter.name = { $regex: q, $options: 'i' };
+      filters.push({
+        $or: [
+          { name: { $regex: q, $options: 'i' } },
+          { building: { $regex: q, $options: 'i' } }
+        ]
+      });
     }
     if (category) {
-      filter.category = category;
+      filters.push({ category });
+    }
+    if (building) {
+      filters.push({ building: { $regex: building, $options: 'i' } });
     }
 
-    const locations = await CampusLocation.find(filter).sort({ name: 1 });
+    const query = filters.length > 0 ? { $and: filters } : {};
+    const locations = await CampusLocation.find(query).sort({ name: 1 });
     sendSuccess(res, 'Locations fetched', { locations });
   } catch (error) {
     // eslint-disable-next-line no-console

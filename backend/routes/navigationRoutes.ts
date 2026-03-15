@@ -16,7 +16,17 @@ const router = Router();
 
 // Public (authenticated students)
 router.get('/', authMiddleware, getAllLocations);
-router.get('/search', authMiddleware, [query('q').optional().isString().trim(), query('category').optional().isString().trim()], validationResultHandler, searchLocations);
+router.get(
+  '/search',
+  authMiddleware,
+  [
+    query('q').optional().isString().trim(),
+    query('category').optional().isString().trim(),
+    query('building').optional().isString().trim()
+  ],
+  validationResultHandler,
+  searchLocations
+);
 router.get('/category/:category', authMiddleware, [param('category').isString().trim()], validationResultHandler, getLocationsByCategory);
 router.get('/:id', authMiddleware, [param('id').isMongoId()], validationResultHandler, getLocationById);
 
