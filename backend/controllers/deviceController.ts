@@ -115,6 +115,10 @@ export const blockDevice = async (req: Request, res: Response): Promise<void> =>
       sendError(res, 'Device not found', 404);
       return;
     }
+    if (device.status === 'blocked') {
+      sendError(res, 'Device is already blocked', 400);
+      return;
+    }
 
     device.status = 'blocked';
     if (remarks) {
