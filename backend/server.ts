@@ -11,6 +11,7 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import connectDB from './config/db';
 import authRoutes from './routes/auth';
+import lostIdRoutes from './routes/lostIdRoutes';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -32,6 +33,7 @@ app.use(cors());
 // Register routes
 // Authentication routes mounted at /api/auth
 app.use('/api/auth', authRoutes);
+app.use('/api/lost-id', lostIdRoutes);
 
 // (No global error handler middleware - removed per cleanup request)
 
