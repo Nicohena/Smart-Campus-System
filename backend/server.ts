@@ -12,6 +12,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/db';
 import authRoutes from './routes/auth';
 import lostIdRoutes from './routes/lostIdRoutes';
+import clearanceRoutes from './routes/clearanceRoutes';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -34,6 +35,7 @@ app.use(cors());
 // Authentication routes mounted at /api/auth
 app.use('/api/auth', authRoutes);
 app.use('/api/lost-id', lostIdRoutes);
+app.use('/api/clearance', clearanceRoutes);
 
 // (No global error handler middleware - removed per cleanup request)
 
