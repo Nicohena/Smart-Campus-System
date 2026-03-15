@@ -94,6 +94,10 @@ export const updateComplaintStatus = async (req: Request, res: Response): Promis
       sendError(res, 'status is required', 400);
       return;
     }
+    if (!['under_review', 'in_progress', 'resolved', 'rejected'].includes(status)) {
+      sendError(res, 'Invalid status update', 400);
+      return;
+    }
 
     const complaint = await Complaint.findById(id);
     if (!complaint) {
@@ -101,11 +105,23 @@ export const updateComplaintStatus = async (req: Request, res: Response): Promis
       return;
     }
 
-    complaint.status = status;
+    const current = complaint.status;
+    const next = status;
+    const isValidTransition =
+      (current === 'submitted' && (next === 'under_review' || next === 'rejected')) ||
+      (current === 'under_review' && next === 'in_progress') ||
+      (current === 'in_progress' && next === 'resolved');
+
+    if (!isValidTransition) {
+      sendError(res, `Invalid status transition from ${current} to ${next}`, 400);
+      return;
+    }
+
+    complaint.status = next;
     if (remarks) {
       complaint.remarks = remarks.trim();
     }
-    if (status === 'resolved') {
+    if (next === 'resolved') {
       complaint.resolvedAt = new Date();
     }
     await complaint.save();
