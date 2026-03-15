@@ -3,6 +3,7 @@ import Complaint from '../models/Complaint';
 import Issue from '../models/Issue';
 import DormInspection from '../models/DormInspection';
 import Clearance from '../models/Clearance';
+import { generateCampusInsights } from '../services/aiAnalyticsService';
 import { sendSuccess, sendError } from '../utils/response';
 
 // GET /api/analytics/dashboard
@@ -109,7 +110,9 @@ export const getAiInsights = async (req: Request, res: Response): Promise<void> 
       `Clearance status breakdown: ${JSON.stringify(clearances)}`
     ].join('\n');
 
-    sendSuccess(res, 'AI insights summary prepared', { insights: [], summary });
+    const insights = await generateCampusInsights(summary);
+
+    sendSuccess(res, 'AI insights generated', { insights });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('AI insights error:', error);
