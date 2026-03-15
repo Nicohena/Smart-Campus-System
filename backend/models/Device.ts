@@ -17,6 +17,7 @@ export interface IDevice extends Document {
   status: DeviceStatus;
   registeredBy: mongoose.Types.ObjectId;
   registeredAt: Date;
+  remarks?: string;
 }
 
 const DeviceSchema: Schema<IDevice> = new Schema(
@@ -33,7 +34,8 @@ const DeviceSchema: Schema<IDevice> = new Schema(
     deviceRegistrationId: { type: String, required: true, unique: true },
     status: { type: String, enum: ['registered', 'active', 'blocked'], default: 'registered' },
     registeredBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    registeredAt: { type: Date, default: Date.now }
+    registeredAt: { type: Date, default: Date.now },
+    remarks: { type: String }
   },
   { timestamps: true }
 );
