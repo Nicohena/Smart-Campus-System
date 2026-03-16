@@ -9,7 +9,7 @@ describe('Complaints System Module', () => {
     const submit = await request(app)
       .post('/api/complaints')
       .set(authHeader(studentToken))
-      .send({ category: 'services', title: 'Cafeteria', description: 'Food quality issue' });
+      .send({ category: 'cafeteria', title: 'Cafeteria', description: 'Food quality issue' });
 
     expect(submit.status).toBe(201);
 
@@ -39,7 +39,7 @@ describe('Complaints System Module', () => {
     const submit = await request(app)
       .post('/api/complaints')
       .set(authHeader(studentToken))
-      .send({ category: 'services', title: 'Library', description: 'Noise complaint' });
+      .send({ category: 'library', title: 'Library', description: 'Noise complaint' });
 
     const complaintId = submit.body.data.complaint._id;
 

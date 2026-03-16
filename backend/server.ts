@@ -30,7 +30,10 @@ dotenv.config();
 const app: Application = express();
 
 // Connect to MongoDB (reads MONGO_URI from process.env)
-connectDB();
+// Skip auto-connect during tests to allow the test harness to manage connections.
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
 
 // Basic middleware
 // Parse incoming JSON requests

@@ -4,8 +4,14 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 let mongoServer: MongoMemoryServer;
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
+  if (!mongoServer) {
+    mongoServer = await MongoMemoryServer.create();
+  }
   const uri = mongoServer.getUri();
+  process.env.MONGO_URI = uri;
   await mongoose.connect(uri);
 });
 

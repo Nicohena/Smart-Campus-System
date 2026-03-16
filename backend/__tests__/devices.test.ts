@@ -42,7 +42,7 @@ describe('Device Registration Module', () => {
       .send({
         studentId: student.studentId,
         phoneNumber: '555-0101',
-        deviceType: 'phone',
+        deviceType: 'tablet',
         brand: 'Apple',
         model: 'iPhone',
         serialNumber: 'SN-456',

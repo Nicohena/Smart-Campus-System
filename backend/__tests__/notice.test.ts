@@ -12,8 +12,8 @@ describe('Notice System Module', () => {
       .send({
         title: 'Maintenance Window',
         description: 'Power maintenance on Saturday',
-        category: 'maintenance',
-        targetAudience: 'all'
+        category: 'general',
+        targetAudience: 'all_students'
       });
 
     expect(create.status).toBe(201);
@@ -44,7 +44,7 @@ describe('Notice System Module', () => {
         title: 'Dorm Notice',
         description: 'Check-in deadline',
         category: 'general',
-        targetAudience: 'students'
+        targetAudience: 'all_students'
       });
 
     const list = await request(app).get('/api/notices').set(authHeader(studentToken));
@@ -62,7 +62,7 @@ describe('Notice System Module', () => {
         title: 'Unauthorized',
         description: 'Should fail',
         category: 'general',
-        targetAudience: 'students'
+        targetAudience: 'all_students'
       });
 
     expect(response.status).toBe(403);

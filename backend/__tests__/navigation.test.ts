@@ -45,7 +45,7 @@ describe('Campus Navigation Module', () => {
       .send({
         name: 'Cafeteria',
         description: 'Dining hall',
-        category: 'services',
+        category: 'service',
         building: 'C1',
         latitude: 9.03,
         longitude: 38.77
