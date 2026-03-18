@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Device from '../models/Device';
 import User from '../models/User';
-import { sendSuccess, sendError } from '../utils/response';
+import { sendSuccess, sendError, isValidId } from '../utils/response';
 
 const generateRegistrationId = (): string => {
   return `DEV-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
@@ -110,6 +110,10 @@ export const blockDevice = async (req: Request, res: Response): Promise<void> =>
     const { id } = req.params;
     const { remarks } = req.body as { remarks?: string };
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid device ID', 400);
+      return;
+    }
     const device = await Device.findById(id);
     if (!device) {
       sendError(res, 'Device not found', 404);
@@ -164,6 +168,10 @@ export const getDeviceById = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid device ID', 400);
+      return;
+    }
     const device = await Device.findOne({ _id: id, student: userId });
     if (!device) {
       sendError(res, 'Device not found', 404);
@@ -188,6 +196,10 @@ export const deleteDeviceById = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid device ID', 400);
+      return;
+    }
     const device = await Device.findOneAndDelete({ _id: id, student: userId });
     if (!device) {
       sendError(res, 'Device not found', 404);

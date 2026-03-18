@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import CampusLocation from '../models/CampusLocation';
-import { sendSuccess, sendError } from '../utils/response';
+import { sendSuccess, sendError, isValidId } from '../utils/response';
 
 // POST /api/navigation
 // Staff/admin create a campus location
@@ -66,6 +66,10 @@ export const updateLocation = async (req: Request, res: Response): Promise<void>
     const { id } = req.params;
     const updates = req.body as Record<string, unknown>;
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid location ID', 400);
+      return;
+    }
     const location = await CampusLocation.findById(id);
     if (!location) {
       sendError(res, 'Location not found', 404);
@@ -98,6 +102,10 @@ export const updateLocation = async (req: Request, res: Response): Promise<void>
 export const deleteLocation = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid location ID', 400);
+      return;
+    }
     const location = await CampusLocation.findById(id);
     if (!location) {
       sendError(res, 'Location not found', 404);
@@ -168,6 +176,10 @@ export const searchLocations = async (req: Request, res: Response): Promise<void
 export const getLocationById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid location ID', 400);
+      return;
+    }
     const location = await CampusLocation.findById(id);
     if (!location) {
       sendError(res, 'Location not found', 404);

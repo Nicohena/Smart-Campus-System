@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import LostID, { ILostID, LostIdStamps } from '../models/LostID';
 import User from '../models/User';
-import { sendSuccess, sendError } from '../utils/response';
+import { sendSuccess, sendError, isValidId } from '../utils/response';
 
 const ALLOWED_STAMPS: Array<keyof LostIdStamps> = [
   'security',
@@ -121,6 +121,10 @@ export const updateStampStatus = async (req: Request, res: Response): Promise<vo
       return;
     }
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid lost ID request ID', 400);
+      return;
+    }
     const request = await LostID.findById(id);
     if (!request) {
       sendError(res, 'Lost ID request not found', 404);
@@ -147,6 +151,10 @@ export const updateStampStatus = async (req: Request, res: Response): Promise<vo
 export const approveLostIdRequest = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid lost ID request ID', 400);
+      return;
+    }
     const request = await LostID.findById(id);
     if (!request) {
       sendError(res, 'Lost ID request not found', 404);
@@ -188,6 +196,10 @@ export const rejectLostIdRequest = async (req: Request, res: Response): Promise<
       return;
     }
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid lost ID request ID', 400);
+      return;
+    }
     const request = await LostID.findById(id);
     if (!request) {
       sendError(res, 'Lost ID request not found', 404);
@@ -215,6 +227,10 @@ export const rejectLostIdRequest = async (req: Request, res: Response): Promise<
 export const issueTemporaryId = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid lost ID request ID', 400);
+      return;
+    }
     const request = await LostID.findById(id);
     if (!request) {
       sendError(res, 'Lost ID request not found', 404);

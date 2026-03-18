@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Complaint, { ComplaintPriority, ComplaintStatus } from '../models/Complaint';
 import User from '../models/User';
-import { sendSuccess, sendError } from '../utils/response';
+import { sendSuccess, sendError, isValidId } from '../utils/response';
 
 // POST /api/complaints
 // Student submits a complaint to the Student Union Office
@@ -99,6 +99,10 @@ export const updateComplaintStatus = async (req: Request, res: Response): Promis
       return;
     }
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid complaint ID', 400);
+      return;
+    }
     const complaint = await Complaint.findById(id);
     if (!complaint) {
       sendError(res, 'Complaint not found', 404);
@@ -146,6 +150,10 @@ export const assignComplaintHandler = async (req: Request, res: Response): Promi
       return;
     }
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid complaint ID', 400);
+      return;
+    }
     const complaint = await Complaint.findById(id);
     if (!complaint) {
       sendError(res, 'Complaint not found', 404);
@@ -189,6 +197,10 @@ export const setComplaintPriority = async (req: Request, res: Response): Promise
       return;
     }
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid complaint ID', 400);
+      return;
+    }
     const complaint = await Complaint.findById(id);
     if (!complaint) {
       sendError(res, 'Complaint not found', 404);

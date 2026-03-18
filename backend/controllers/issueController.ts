@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import Issue, { IssueStatus, IssueType } from '../models/Issue';
 import Dorm from '../models/Dorm';
 import User from '../models/User';
-import { sendSuccess, sendError } from '../utils/response';
+import { sendSuccess, sendError, isValidId } from '../utils/response';
 
 // POST /api/issues/report
 // Student reports a dorm or campus issue
@@ -103,6 +103,10 @@ export const assignTechnician = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid issue ID', 400);
+      return;
+    }
     const issue = await Issue.findById(id);
     if (!issue) {
       sendError(res, 'Issue not found', 404);
@@ -147,6 +151,10 @@ export const updateIssueStatus = async (req: Request, res: Response): Promise<vo
       return;
     }
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid issue ID', 400);
+      return;
+    }
     const issue = await Issue.findById(id);
     if (!issue) {
       sendError(res, 'Issue not found', 404);

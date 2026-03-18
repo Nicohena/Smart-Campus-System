@@ -4,7 +4,7 @@ import Clearance, { IClearance } from '../models/Clearance';
 import Dorm from '../models/Dorm';
 import DormInspection from '../models/DormInspection';
 import User from '../models/User';
-import { sendSuccess, sendError } from '../utils/response';
+import { sendSuccess, sendError, isValidId } from '../utils/response';
 
 const areAllApprovalsComplete = (clearance: IClearance): boolean => {
   return (
@@ -107,6 +107,10 @@ const markApproval = async (
     return;
   }
 
+  if (!isValidId(id)) {
+    sendError(res, 'Invalid clearance ID', 400);
+    return;
+  }
   const clearance = await Clearance.findById(id);
   if (!clearance) {
     sendError(res, 'Clearance record not found', 404);

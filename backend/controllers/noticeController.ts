@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Notice, { NoticeStatus } from '../models/Notice';
-import { sendSuccess, sendError } from '../utils/response';
+import { sendSuccess, sendError, isValidId } from '../utils/response';
 
 // POST /api/notices
 // Staff/admin create a new notice
@@ -67,6 +67,10 @@ export const updateNotice = async (req: Request, res: Response): Promise<void> =
     const { id } = req.params;
     const updates = req.body as Record<string, unknown>;
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid notice ID', 400);
+      return;
+    }
     const notice = await Notice.findById(id);
     if (!notice) {
       sendError(res, 'Notice not found', 404);
@@ -115,6 +119,10 @@ export const updateNotice = async (req: Request, res: Response): Promise<void> =
 export const deleteNotice = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid notice ID', 400);
+      return;
+    }
     const notice = await Notice.findById(id);
     if (!notice) {
       sendError(res, 'Notice not found', 404);
@@ -142,6 +150,10 @@ export const setNoticeStatus = async (req: Request, res: Response): Promise<void
       return;
     }
 
+    if (!isValidId(id)) {
+      sendError(res, 'Invalid notice ID', 400);
+      return;
+    }
     const notice = await Notice.findById(id);
     if (!notice) {
       sendError(res, 'Notice not found', 404);
