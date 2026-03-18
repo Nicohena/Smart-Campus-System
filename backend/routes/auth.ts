@@ -43,7 +43,7 @@ router.post(
 router.get('/profile', authMiddleware, profile);
 
 // Refresh token endpoint
-router.post('/refresh', [body('refreshToken').isString().trim()], validationResultHandler, refreshToken);
+router.post('/refresh', [body('refreshToken').optional().isString().trim()], validationResultHandler, refreshToken);
 
 // Logout (revoke refresh token)
 router.post('/logout', authMiddleware, logout);
