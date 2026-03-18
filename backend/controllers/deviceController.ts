@@ -90,12 +90,21 @@ export const registerDevice = async (req: Request, res: Response): Promise<void>
 // Security staff/admin view all devices
 export const getAllDevices = async (req: Request, res: Response): Promise<void> => {
   try {
-    const devices = await Device.find()
-      .populate('student', 'name studentId email')
-      .populate('registeredBy', 'name email')
-      .sort({ registeredAt: -1 });
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
 
-    sendSuccess(res, 'Devices fetched', { devices });
+    const [devices, total] = await Promise.all([
+      Device.find()
+        .populate('student', 'name studentId email')
+        .populate('registeredBy', 'name email')
+        .sort({ registeredAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Device.countDocuments()
+    ]);
+
+    sendSuccess(res, 'Devices fetched', { devices, total, page, limit });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Get all devices error:', error);

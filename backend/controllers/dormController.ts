@@ -291,6 +291,9 @@ export const inspectDorm = async (req: Request, res: Response): Promise<void> =>
 export const getDormInspectionHistory = async (req: Request, res: Response): Promise<void> => {
   try {
     const { dormId, studentId } = req.query as { dormId?: string; studentId?: string };
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
 
     let resolvedDormId = dormId;
     if (!resolvedDormId && studentId) {
@@ -308,12 +311,17 @@ export const getDormInspectionHistory = async (req: Request, res: Response): Pro
     }
 
     const filter = resolvedDormId ? { dorm: resolvedDormId } : {};
-    const inspections = await DormInspection.find(filter)
-      .populate('dorm', 'block roomNumber')
-      .populate('inspectedBy', 'name email')
-      .sort({ inspectionDate: -1 });
+    const [inspections, total] = await Promise.all([
+      DormInspection.find(filter)
+        .populate('dorm', 'block roomNumber')
+        .populate('inspectedBy', 'name email')
+        .sort({ inspectionDate: -1 })
+        .skip(skip)
+        .limit(limit),
+      DormInspection.countDocuments(filter)
+    ]);
 
-    sendSuccess(res, 'Dorm inspections fetched', { inspections });
+    sendSuccess(res, 'Dorm inspections fetched', { inspections, total, page, limit });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Get dorm inspections error:', error);

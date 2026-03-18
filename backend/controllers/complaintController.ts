@@ -70,12 +70,21 @@ export const getMyComplaints = async (req: Request, res: Response): Promise<void
 // Staff/admin views all complaints
 export const getAllComplaints = async (req: Request, res: Response): Promise<void> => {
   try {
-    const complaints = await Complaint.find()
-      .populate('student', 'name studentId email')
-      .populate('handledBy', 'name email')
-      .sort({ submittedAt: -1 });
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
 
-    sendSuccess(res, 'Complaints fetched', { complaints });
+    const [complaints, total] = await Promise.all([
+      Complaint.find()
+        .populate('student', 'name studentId email')
+        .populate('handledBy', 'name email')
+        .sort({ submittedAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Complaint.countDocuments()
+    ]);
+
+    sendSuccess(res, 'Complaints fetched', { complaints, total, page, limit });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Get all complaints error:', error);

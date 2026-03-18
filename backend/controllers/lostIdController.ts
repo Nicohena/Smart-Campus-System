@@ -74,11 +74,20 @@ export const getMyLostIdRequests = async (req: Request, res: Response): Promise<
 // Staff/admin fetch all requests
 export const getAllLostIdRequests = async (req: Request, res: Response): Promise<void> => {
   try {
-    const requests = await LostID.find()
-      .populate('student', 'name studentId email role')
-      .sort({ createdAt: -1 });
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
 
-    sendSuccess(res, 'All lost ID requests fetched', { requests });
+    const [requests, total] = await Promise.all([
+      LostID.find()
+        .populate('student', 'name studentId email role')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      LostID.countDocuments()
+    ]);
+
+    sendSuccess(res, 'All lost ID requests fetched', { requests, total, page, limit });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Get all lost ID requests error:', error);

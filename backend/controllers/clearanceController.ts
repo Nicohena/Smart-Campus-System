@@ -80,10 +80,20 @@ export const getMyClearance = async (req: Request, res: Response): Promise<void>
 // Staff/admin views all clearance records
 export const getAllClearanceRequests = async (req: Request, res: Response): Promise<void> => {
   try {
-    const records = await Clearance.find()
-      .populate('student', 'name studentId email role')
-      .sort({ createdAt: -1 });
-    sendSuccess(res, 'Clearance records fetched', { records });
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const [records, total] = await Promise.all([
+      Clearance.find()
+        .populate('student', 'name studentId email role')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Clearance.countDocuments()
+    ]);
+
+    sendSuccess(res, 'Clearance records fetched', { records, total, page, limit });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Get all clearance error:', error);

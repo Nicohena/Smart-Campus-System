@@ -77,13 +77,22 @@ export const getMyIssues = async (req: Request, res: Response): Promise<void> =>
 // Staff/admin views all issues
 export const getAllIssues = async (req: Request, res: Response): Promise<void> => {
   try {
-    const issues = await Issue.find()
-      .populate('student', 'name studentId email')
-      .populate('assignedTechnician', 'name email')
-      .populate('dorm', 'block roomNumber')
-      .sort({ reportedAt: -1 });
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
 
-    sendSuccess(res, 'Issues fetched', { issues });
+    const [issues, total] = await Promise.all([
+      Issue.find()
+        .populate('student', 'name studentId email')
+        .populate('assignedTechnician', 'name email')
+        .populate('dorm', 'block roomNumber')
+        .sort({ reportedAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Issue.countDocuments()
+    ]);
+
+    sendSuccess(res, 'Issues fetched', { issues, total, page, limit });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Get all issues error:', error);
