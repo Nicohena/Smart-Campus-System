@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import Issue from '../models/Issue';
 import { generateMaintenancePredictions } from '../services/predictiveService';
+import { sendSuccess, sendError } from '../utils/response';
 
 interface CountRow {
   _id: string;
@@ -159,16 +160,18 @@ export const getMaintenancePredictions = async (req: Request, res: Response): Pr
       .map((line) => line.replace(/^[-*\d.]+\s*/, '').trim())
       .filter(Boolean);
 
-    res.status(200).json({ predictions: predictions.length ? predictions : [predictionText] });
+    sendSuccess(res, 'Maintenance predictions generated', {
+      predictions: predictions.length ? predictions : [predictionText]
+    });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Predictive maintenance error:', error);
 
     if (axios.isAxiosError(error)) {
-      res.status(502).json({ message: 'Prediction service is currently unavailable' });
+      sendError(res, 'Prediction service is currently unavailable', 502);
       return;
     }
 
-    res.status(500).json({ message: 'Could not generate maintenance predictions' });
+    sendError(res, 'Could not generate maintenance predictions');
   }
 };
