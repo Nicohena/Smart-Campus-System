@@ -40,8 +40,24 @@ if (process.env.NODE_ENV !== 'test') {
 app.use(express.json());
 // Parse cookies for refresh token handling
 app.use(cookieParser());
-// Enable CORS for cross-origin requests
-app.use(cors());
+// Enable CORS - allow configured origins and pass cookies (credentials)
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, Postman, server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin '${origin}' not allowed`));
+      }
+    },
+    credentials: true, // Required so the browser sends / receives the refreshToken cookie
+  })
+);
 
 // Register routes
 // Authentication routes mounted at /api/auth
@@ -58,7 +74,13 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/assistant', chatRoutes);
 app.use('/api/predictions', predictiveRoutes);
 
-// (No global error handler middleware - removed per cleanup request)
+// Global error-handling middleware (must have 4 params so Express recognises it as error handler)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  // eslint-disable-next-line no-console
+  console.error('Unhandled error:', err);
+  res.status(500).json({ success: false, message: 'Internal server error' });
+});
 
 // Export the app for testing purposes
 export default app;
