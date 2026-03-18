@@ -9,7 +9,11 @@ import { signAccessToken, generateRefreshToken } from '../utils/tokenService';
 // Creates a new user. Only staff/admin should be allowed to call this route
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, studentId, email, password, role = 'student', department } = req.body;
+    const { name, studentId, email, password, department } = req.body;
+    // Only admins can choose a role; staff can only create student accounts
+    const role: 'student' | 'staff' | 'admin' =
+      req.user?.role === 'admin' ? (req.body.role ?? 'student') : 'student';
+
     if (!name || !studentId || !email || !password) {
       sendError(res, 'Missing required fields', 400);
       return;
