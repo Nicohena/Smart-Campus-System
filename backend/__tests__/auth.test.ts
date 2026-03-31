@@ -5,22 +5,22 @@ import { createUser, createAndLogin, authHeader } from './helpers/testUtils';
 describe('Authentication Module', () => {
   it('should login a student successfully', async () => {
     const password = 'Password123!';
-    const user = await createUser({ email: 'student1@example.edu', password, role: 'student' });
+    const user = await createUser({ studentId: 'SID-LOGIN-1', password, role: 'student' });
 
     const response = await request(app)
       .post('/api/auth/login')
-      .send({ email: user.email, password });
+      .send({ studentId: user.studentId, password });
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('data.token');
   });
 
   it('should fail login with wrong password', async () => {
-    const user = await createUser({ email: 'student2@example.edu', password: 'Password123!' });
+    const user = await createUser({ studentId: 'SID-LOGIN-2', password: 'Password123!' });
 
     const response = await request(app)
       .post('/api/auth/login')
-      .send({ email: user.email, password: 'wrongpass' });
+      .send({ studentId: user.studentId, password: 'wrongpass' });
 
     expect(response.status).toBe(401);
   });
@@ -34,7 +34,6 @@ describe('Authentication Module', () => {
       .send({
         name: 'New User',
         studentId: 'SID-REG-1',
-        email: 'newuser@example.edu',
         password: 'Password123!'
       });
 
@@ -50,7 +49,6 @@ describe('Authentication Module', () => {
       .send({
         name: 'New Student',
         studentId: 'SID-REG-2',
-        email: 'newstudent@example.edu',
         password: 'Password123!'
       });
 
