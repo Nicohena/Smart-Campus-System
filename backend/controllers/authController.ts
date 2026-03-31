@@ -9,24 +9,24 @@ import { signAccessToken, generateRefreshToken } from '../utils/tokenService';
 // Creates a new user. Only staff/admin should be allowed to call this route
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, studentId, email, password, department } = req.body;
+    const { name, studentId, password, department } = req.body;
     // Only admins can choose a role; staff can only create student accounts
     const role: 'student' | 'staff' | 'admin' =
       req.user?.role === 'admin' ? (req.body.role ?? 'student') : 'student';
 
-    if (!name || !studentId || !email || !password) {
+    if (!name || !studentId || !password) {
       sendError(res, 'Missing required fields', 400);
       return;
     }
 
     // Prevent creating duplicate users
-    const existing = await User.findOne({ $or: [{ email }, { studentId }] });
+    const existing = await User.findOne({ studentId });
     if (existing) {
-      sendError(res, 'User with that email or studentId already exists', 409);
+      sendError(res, 'User with that studentId already exists', 409);
       return;
     }
 
-    const user = new User({ name, studentId, email, password, role, department });
+    const user = new User({ name, studentId, password, role, department });
     await user.save();
 
     const userObj = user.toObject();
@@ -45,13 +45,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 // Students (and other roles) use this to obtain a JWT and refresh token
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      sendError(res, 'Email and password required', 400);
+    const { studentId, password } = req.body;
+    if (!studentId || !password) {
+      sendError(res, 'Student ID and password required', 400);
       return;
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ studentId });
     if (!user) {
       sendError(res, 'Invalid credentials', 401);
       return;

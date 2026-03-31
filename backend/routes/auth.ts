@@ -19,7 +19,7 @@ const loginLimiter = rateLimit({
 router.post(
 	'/login',
 	loginLimiter,
-	[body('email').isEmail().normalizeEmail(), body('password').isString().trim().escape()],
+	[body('studentId').isString().trim().escape(), body('password').isString().trim().escape()],
 	validationResultHandler,
 	login
 );
@@ -32,7 +32,6 @@ router.post(
 	[
 		body('name').isString().trim().escape(),
 		body('studentId').isString().trim().escape(),
-		body('email').isEmail().normalizeEmail(),
 		body('password').isLength({ min: 8 })
 	],
 	validationResultHandler,
