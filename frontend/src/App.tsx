@@ -1,3 +1,5 @@
+import { Routes, Route, Link } from "react-router-dom";
+import { Login } from "./components/Login";
 
 import { Hero } from "./components/landing/Hero";
 import { Features } from "./components/landing/Features";
@@ -7,7 +9,7 @@ import { Testimonials } from "./components/landing/Testimonials";
 import { CTA } from "./components/landing/CTA";
 import { GraduationCap } from "lucide-react";
 
-function App() {
+function Landing() {
   return (
     <div className="bg-black min-h-screen text-white font-sans selection:bg-purple-500/30">
       {/* Navigation - simple version for landing */}
@@ -25,9 +27,9 @@ function App() {
             <a href="#team" className="hover:text-white transition-colors">Team</a>
           </div>
           <div className="flex items-center">
-            <button className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-full border border-white/10 transition-colors">
+            <Link to="/login" className="bg-white/10 hover:bg-white/20 text-white px-6 py-2 rounded-full border border-white/10 transition-colors">
               Login
-            </button>
+            </Link>
           </div>
         </div>
       </nav>
@@ -47,6 +49,15 @@ function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+    </Routes>
   );
 }
 
