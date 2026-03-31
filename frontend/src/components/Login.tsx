@@ -14,11 +14,9 @@ export function Login() {
       {/* Subtle background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-900/10 rounded-full blur-[120px] pointer-events-none"></div>
 
-      <div className="bg-[#09090b] border border-white/5 shadow-2xl rounded-2xl p-8 w-[400px] max-w-[90vw] z-10">
+      <div className="bg-[#09090b] border border-white/5 shadow-2xl rounded-2xl p-8 w-[400px] max-w-[90vw] z-10 animate-border-glow">
         <div className="flex flex-col mb-8">
-          <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/5">
-            <Shield className="w-5 h-5 text-purple-500" fill="currentColor" />
-          </div>
+      <br></br>
 
           <h1 className="text-[26px] font-semibold text-white tracking-tight leading-tight">
             Login to Your <br /> Account
@@ -31,14 +29,14 @@ export function Login() {
         <div className="space-y-5">
           {/* Student ID field */}
           <div>
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">
-              Student ID
+            <label className="text-[13px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">
+             ID
             </label>
             <div className="relative">
               <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input
                 type="text"
-                placeholder="e.g. STU-2024-0001"
+                placeholder="DBU1111111"
                 value={studentId}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStudentId(e.target.value)}
                 className="w-full bg-[#141415] border border-white/5 rounded-lg py-3.5 pl-11 pr-4 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all font-medium"
@@ -48,14 +46,14 @@ export function Login() {
 
           {/* Password field */}
           <div>
-            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">
+            <label className="text-[13px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">
               Password
             </label>
             <div className="relative">
               <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input
                 type="password"
-                placeholder="••••••••••••"
+                placeholder="•••••••"
                 value={password}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                 className="w-full bg-[#141415] border border-white/5 rounded-lg py-3.5 pl-11 pr-4 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all tracking-widest"
@@ -63,22 +61,18 @@ export function Login() {
             </div>
           </div>
 
-          <div className="pt-2">
+          <div className="mt-16">
             <button
               onClick={handleLogin}
-              className="w-full bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_25px_rgba(168,85,247,0.5)]"
+              className="w-full bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_25px_rgba(168,85,247,0.5)] cursor-pointer"
             >
               Log In <ArrowRight className="w-4 h-4 ml-1" />
             </button>
           </div>
         </div>
 
-        {/* Step dots */}
-        <div className="flex justify-center gap-1.5 mt-10 mb-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-purple-600"></div>
-          <div className="w-1.5 h-1.5 rounded-full bg-zinc-800"></div>
-          <div className="w-1.5 h-1.5 rounded-full bg-zinc-800"></div>
-        </div>
+      
+      
       </div>
 
       <div className="mt-8 text-zinc-600 text-[11px] uppercase tracking-wider font-semibold z-10">
