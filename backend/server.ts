@@ -41,7 +41,7 @@ app.use(express.json());
 // Parse cookies for refresh token handling
 app.use(cookieParser());
 // Enable CORS - allow configured origins and pass cookies (credentials)
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173')
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:5174')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean);
