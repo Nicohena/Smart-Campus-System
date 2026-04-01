@@ -1,5 +1,7 @@
 import { Routes, Route, Link } from "react-router-dom";
 import { Login } from "./components/Login";
+import { AdminLayout } from "./pages/admin/AdminLayout";
+import { Dashboard } from "./pages/admin/Dashboard";
 
 import { Hero } from "./components/landing/Hero";
 import { Features } from "./components/landing/Features";
@@ -57,6 +59,10 @@ function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<Dashboard />} />
+        {/* We can add other admin pages here like Teams, Activity, etc. */}
+      </Route>
     </Routes>
   );
 }

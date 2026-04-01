@@ -26,8 +26,8 @@ export function Login() {
       localStorage.setItem("token", data.data.token)
       localStorage.setItem("user", JSON.stringify(data.data.user))
 
-      // Redirect to dashboard (or home for now)
-      navigate("/")
+      // Redirect to dashboard
+      navigate("/admin")
     } catch (err: any) {
       setError(err.message || "Login failed. Please try again.")
     } finally {
