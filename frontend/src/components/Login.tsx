@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Shield, Key, Hash, ArrowRight, Loader2 } from "lucide-react"
+import { Key, Hash, ArrowRight, Loader2 } from "lucide-react"
 import { authApi } from "../api/auth"
 
 export function Login() {
