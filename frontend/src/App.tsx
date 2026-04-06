@@ -2,6 +2,12 @@ import { Routes, Route, Link } from "react-router-dom";
 import { Login } from "./components/Login";
 import { AdminLayout } from "./pages/admin/AdminLayout";
 import { Dashboard } from "./pages/admin/Dashboard";
+import { Complaints } from "./pages/admin/Complaints";
+import { Issues } from "./pages/admin/Issues";
+import { Clearances } from "./pages/admin/Clearances";
+import { Notices } from "./pages/admin/Notices";
+import { LostIdRequests } from "./pages/admin/LostIdRequests";
+import { DormManagement } from "./pages/admin/DormManagement";
 
 import { Hero } from "./components/landing/Hero";
 import { Features } from "./components/landing/Features";
@@ -61,7 +67,12 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
-        {/* We can add other admin pages here like Teams, Activity, etc. */}
+        <Route path="complaints" element={<Complaints />} />
+        <Route path="issues" element={<Issues />} />
+        <Route path="clearances" element={<Clearances />} />
+        <Route path="notices" element={<Notices />} />
+        <Route path="lost-id" element={<LostIdRequests />} />
+        <Route path="dorms" element={<DormManagement />} />
       </Route>
     </Routes>
   );
