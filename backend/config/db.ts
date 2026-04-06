@@ -14,7 +14,11 @@ const connectDB = async (): Promise<void> => {
   }
 
   try {
-    await mongoose.connect(uri);
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+    });
     // eslint-disable-next-line no-console
     console.log('MongoDB connected');
   } catch (error) {
