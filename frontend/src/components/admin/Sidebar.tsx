@@ -1,14 +1,12 @@
 import { NavLink } from "react-router-dom";
 import { 
   LayoutDashboard, 
-  Calendar, 
-  Users, 
-  Activity, 
-  MessageSquare, 
-  FileText, 
-  Wallet, 
-  Receipt, 
-  PhoneCall, 
+  AlertTriangle, 
+  Wrench, 
+  ClipboardCheck, 
+  Megaphone, 
+  CreditCard, 
+  Building, 
   Settings, 
   UserCog, 
   HelpCircle,
@@ -21,26 +19,42 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
-  const navItems = [
+  const overviewItems = [
     { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
-    { name: "Calendar", path: "/admin/calendar", icon: Calendar },
-    { name: "Teams", path: "/admin/teams", icon: Users },
-    { name: "Activity", path: "/admin/activity", icon: Activity },
-    { name: "Message", path: "/admin/message", icon: MessageSquare },
-    { name: "Report", path: "/admin/report", icon: FileText },
   ];
 
-  const paymentItems = [
-    { name: "Payroll", path: "/admin/payroll", icon: Wallet },
-    { name: "Billing", path: "/admin/billing", icon: Receipt },
-    { name: "Contact", path: "/admin/contact", icon: PhoneCall },
+  const managementItems = [
+    { name: "Complaints", path: "/admin/complaints", icon: AlertTriangle },
+    { name: "Issues", path: "/admin/issues", icon: Wrench },
+    { name: "Clearances", path: "/admin/clearances", icon: ClipboardCheck },
+    { name: "Notices", path: "/admin/notices", icon: Megaphone },
+    { name: "Lost ID Requests", path: "/admin/lost-id", icon: CreditCard },
+    { name: "Dorm Management", path: "/admin/dorms", icon: Building },
   ];
 
-  const bottomItems = [
+  const systemItems = [
     { name: "Settings", path: "/admin/settings", icon: Settings },
     { name: "User Management", path: "/admin/users", icon: UserCog },
     { name: "Help & Support", path: "/admin/help", icon: HelpCircle },
   ];
+
+  const renderNavItems = (items: typeof overviewItems) =>
+    items.map((item) => (
+      <NavLink
+        key={item.name}
+        to={item.path}
+        end={item.path === "/admin"}
+        className={({ isActive }) => `
+          flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors
+          ${isActive 
+            ? "bg-zinc-800/50 text-white border border-white/5" 
+            : "text-zinc-400 hover:text-white hover:bg-zinc-900"}
+        `}
+      >
+        <item.icon size={18} />
+        {item.name}
+      </NavLink>
+    ));
 
   return (
     <>
@@ -74,45 +88,16 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-6 px-4 custom-scrollbar">
           <div className="mb-8">
-            <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-3">Main Menu</p>
+            <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-3">Overview</p>
             <nav className="space-y-1">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.name}
-                  to={item.path}
-                  end={item.path === "/admin"}
-                  className={({ isActive }) => `
-                    flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors
-                    ${isActive 
-                      ? "bg-zinc-800/50 text-white border border-white/5" 
-                      : "text-zinc-400 hover:text-white hover:bg-zinc-900"}
-                  `}
-                >
-                  <item.icon size={18} />
-                  {item.name}
-                </NavLink>
-              ))}
+              {renderNavItems(overviewItems)}
             </nav>
           </div>
 
           <div className="mb-8">
-            <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-3">Payments</p>
+            <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-3">Management</p>
             <nav className="space-y-1">
-              {paymentItems.map((item) => (
-                <NavLink
-                  key={item.name}
-                  to={item.path}
-                  className={({ isActive }) => `
-                    flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors
-                    ${isActive 
-                      ? "bg-zinc-800/50 text-white border border-white/5" 
-                      : "text-zinc-400 hover:text-white hover:bg-zinc-900"}
-                  `}
-                >
-                  <item.icon size={18} />
-                  {item.name}
-                </NavLink>
-              ))}
+              {renderNavItems(managementItems)}
             </nav>
           </div>
         </div>
@@ -120,21 +105,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         {/* Bottom Menu */}
         <div className="p-4 border-t border-[#1e1e24]">
           <nav className="space-y-1 mb-6">
-            {bottomItems.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.path}
-                className={({ isActive }) => `
-                  flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors
-                  ${isActive 
-                    ? "bg-zinc-800/50 text-white border border-white/5" 
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-900"}
-                `}
-              >
-                <item.icon size={18} />
-                {item.name}
-              </NavLink>
-            ))}
+            {renderNavItems(systemItems)}
           </nav>
           
           {/* User profile snippet */}
@@ -143,8 +114,8 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               <img src="https://i.pravatar.cc/150?u=a" alt="User" className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">Austin Martin</p>
-              <p className="text-[11px] text-zinc-500 truncate">austinm@gmail.com</p>
+              <p className="text-sm font-medium text-white truncate">System Admin</p>
+              <p className="text-[11px] text-zinc-500 truncate">admin@campus.edu</p>
             </div>
           </div>
         </div>
