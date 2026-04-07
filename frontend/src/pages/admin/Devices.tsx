@@ -110,8 +110,8 @@ export function Devices() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Devices"
-        description="Register student devices, block them with remarks, and remove device records when necessary."
+        title="Security Devices"
+        description="Register student devices, verify the current registry, and block devices when security action is required."
         actions={
           <ActionButton type="button" variant="primary" onClick={loadDevices} disabled={loading}>
             {loading ? "Refreshing..." : "Refresh"}
@@ -122,7 +122,7 @@ export function Devices() {
       {error ? <EmptyState title="Device actions need attention" description={error} /> : null}
 
       <div className="grid gap-6 xl:grid-cols-[0.92fr_1.18fr]">
-        <Panel title="Register Device" description="The form mirrors the required backend registration payload.">
+        <Panel title="Register Device" description="Use this quick form at intake or gate checkpoints to capture the security registration payload.">
           <form className="space-y-4" onSubmit={registerDevice}>
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Student ID">
@@ -162,7 +162,7 @@ export function Devices() {
           </form>
         </Panel>
 
-        <Panel title="Registered Devices" description="Blocked devices remain visible with their block remarks and registration ids.">
+        <Panel title="Registered Devices" description="Blocked devices remain visible with their security remarks and registration ids.">
           {devices.length ? (
             <div className="space-y-4">
               {devices.map((device) => (

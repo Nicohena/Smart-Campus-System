@@ -1,27 +1,16 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
-import {
-  registerDevice,
-  getAllDevices,
-  blockDevice,
-  getMyDevices,
-  getDeviceById,
-  deleteDeviceById
-} from '../controllers/deviceController';
+import { registerDevice, getAllDevices, blockDevice, deleteDeviceById } from '../controllers/deviceController';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { validationResultHandler } from './validationHelpers';
 
 const router = Router();
 
-// Student routes
-router.get('/my', authMiddleware, requireRole(['student']), getMyDevices);
-router.get('/:id', authMiddleware, requireRole(['student']), [param('id').isMongoId()], validationResultHandler, getDeviceById);
-
-// Security/Admin routes
+// Security-only routes
 router.post(
   '/register',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['security']),
   [
     body('studentId').isString().trim(),
     body('phoneNumber').isString().trim(),
@@ -36,18 +25,17 @@ router.post(
   registerDevice
 );
 
-router.get('/', authMiddleware, requireRole(['staff', 'admin']), getAllDevices);
+router.get('/', authMiddleware, requireRole(['security']), getAllDevices);
 
 router.patch(
   '/:id/block',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['security']),
   [param('id').isMongoId(), body('remarks').optional().isString().trim()],
   validationResultHandler,
   blockDevice
 );
 
-
-router.delete('/:id', authMiddleware, requireRole(['staff', 'admin']), [param('id').isMongoId()], validationResultHandler,deleteDeviceById);
+router.delete('/:id', authMiddleware, requireRole(['security']), [param('id').isMongoId()], validationResultHandler, deleteDeviceById);
 
 export default router;

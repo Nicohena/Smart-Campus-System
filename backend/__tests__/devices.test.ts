@@ -1,15 +1,15 @@
 import request from 'supertest';
 import app from '../server';
-import { createAndLogin, authHeader, loginUser } from './helpers/testUtils';
+import { createAndLogin, authHeader } from './helpers/testUtils';
 
 describe('Device Registration Module', () => {
-  it('should allow staff to register and block a device', async () => {
+  it('should allow security staff to register and block a device', async () => {
     const { user: student } = await createAndLogin(app, 'student');
-    const { token: staffToken } = await createAndLogin(app, 'staff');
+    const { token: securityToken } = await createAndLogin(app, 'security');
 
     const register = await request(app)
       .post('/api/devices/register')
-      .set(authHeader(staffToken))
+      .set(authHeader(securityToken))
       .send({
         studentId: student.studentId,
         phoneNumber: '555-0100',
@@ -25,20 +25,19 @@ describe('Device Registration Module', () => {
 
     const block = await request(app)
       .patch(`/api/devices/${deviceId}/block`)
-      .set(authHeader(staffToken))
+      .set(authHeader(securityToken))
       .send({ remarks: 'Policy violation' });
 
     expect(block.status).toBe(200);
   });
 
-  it('should allow student to view registered devices', async () => {
+  it('should allow security staff to view registered devices', async () => {
     const { user: student } = await createAndLogin(app, 'student');
-    const { token: staffToken } = await createAndLogin(app, 'staff');
-    const studentToken = await loginUser(app, student.studentId, 'Password123!');
+    const { token: securityToken } = await createAndLogin(app, 'security');
 
     await request(app)
       .post('/api/devices/register')
-      .set(authHeader(staffToken))
+      .set(authHeader(securityToken))
       .send({
         studentId: student.studentId,
         phoneNumber: '555-0101',
@@ -49,12 +48,12 @@ describe('Device Registration Module', () => {
         macAddress: '11:22:33:44:55:66'
       });
 
-    const myDevices = await request(app)
-      .get('/api/devices/my')
-      .set(authHeader(studentToken));
+    const devices = await request(app)
+      .get('/api/devices')
+      .set(authHeader(securityToken));
 
-    expect(myDevices.status).toBe(200);
-    expect(myDevices.body.data.devices.length).toBe(1);
+    expect(devices.status).toBe(200);
+    expect(devices.body.data.devices.length).toBe(1);
   });
 
   it('should prevent students from registering devices', async () => {
