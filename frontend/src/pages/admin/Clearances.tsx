@@ -75,8 +75,8 @@ export function Clearances() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Clearances"
-        description="Approve the sequential clearance checkpoints exactly as the backend enforces them."
+        title="Proctor Clearances"
+        description="Review student clearance records from the proctor office and complete approvals in the backend sequence."
         actions={
           <ActionButton type="button" variant="primary" onClick={loadRecords} disabled={loading}>
             {loading ? "Refreshing..." : "Refresh"}

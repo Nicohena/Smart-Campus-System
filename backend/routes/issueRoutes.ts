@@ -25,13 +25,13 @@ router.post(
 
 router.get('/my-issues', authMiddleware, requireRole(['student']), getMyIssues);
 
-// Staff/Admin routes
-router.get('/', authMiddleware, requireRole(['staff', 'admin']), getAllIssues);
+// Proctor routes
+router.get('/', authMiddleware, requireRole(['proctor']), getAllIssues);
 
 router.patch(
   '/:id/assign',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['proctor']),
   [param('id').isMongoId(), body('assignedTechnician').isMongoId()],
   validationResultHandler,
   assignTechnician
@@ -40,7 +40,7 @@ router.patch(
 router.patch(
   '/:id/status',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['proctor']),
   [param('id').isMongoId(), body('status').isString().trim()],
   validationResultHandler,
   updateIssueStatus
@@ -49,7 +49,7 @@ router.patch(
 router.get(
   '/dorm/:dormId',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['proctor']),
   [param('dormId').isMongoId()],
   validationResultHandler,
   getDormIssues

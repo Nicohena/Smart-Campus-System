@@ -93,8 +93,8 @@ export function Issues() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Issues"
-        description="Assign technicians, progress issue states, and filter with the dedicated dorm issue endpoint."
+        title="Maintenance Issues"
+        description="Track dorm maintenance reports, assign follow-up owners, and progress issue states from the proctor workspace."
         actions={
           <>
             <TextInput value={dormFilter} onChange={(event) => setDormFilter(event.target.value)} placeholder="Dorm id for dorm filter" />

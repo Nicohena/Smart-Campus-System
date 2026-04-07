@@ -32,9 +32,9 @@ describe('Maintenance / Issue Reporting Module', () => {
     expect(response.status).toBe(400);
   });
 
-  it('should allow staff to view and assign issues', async () => {
+  it('should allow proctor staff to view and assign issues', async () => {
     const { token: studentToken } = await createAndLogin(app, 'student');
-    const { token: staffToken, user: staffUser } = await createAndLogin(app, 'staff');
+    const { token: proctorToken, user: proctorUser } = await createAndLogin(app, 'proctor');
 
     const report = await request(app)
       .post('/api/issues/report')
@@ -43,13 +43,13 @@ describe('Maintenance / Issue Reporting Module', () => {
 
     const issueId = report.body.data.issue._id;
 
-    const list = await request(app).get('/api/issues').set(authHeader(staffToken));
+    const list = await request(app).get('/api/issues').set(authHeader(proctorToken));
     expect(list.status).toBe(200);
 
     const assign = await request(app)
       .patch(`/api/issues/${issueId}/assign`)
-      .set(authHeader(staffToken))
-      .send({ assignedTechnician: staffUser._id });
+      .set(authHeader(proctorToken))
+      .send({ assignedTechnician: proctorUser._id });
 
     expect(assign.status).toBe(200);
   });

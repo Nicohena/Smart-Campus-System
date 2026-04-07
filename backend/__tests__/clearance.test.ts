@@ -32,9 +32,9 @@ describe('Clearance System Module', () => {
     expect(listRes.body.data.records.length).toBe(1);
   });
 
-  it('should allow staff to view all clearance requests', async () => {
+  it('should allow proctor staff to view all clearance requests', async () => {
     const { token: studentToken } = await createAndLogin(app, 'student');
-    const { token: staffToken } = await createAndLogin(app, 'staff');
+    const { token: proctorToken } = await createAndLogin(app, 'proctor');
 
     await request(app)
       .post('/api/clearance/request')
@@ -43,7 +43,7 @@ describe('Clearance System Module', () => {
 
     const response = await request(app)
       .get('/api/clearance')
-      .set(authHeader(staffToken));
+      .set(authHeader(proctorToken));
 
     expect(response.status).toBe(200);
     expect(response.body.data.records.length).toBe(1);

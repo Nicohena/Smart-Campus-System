@@ -25,13 +25,13 @@ router.post(
 );
 router.get('/my-clearance', authMiddleware, requireRole(['student']), getMyClearance);
 
-// Staff/Admin routes
-router.get('/', authMiddleware, requireRole(['staff', 'admin']), getAllClearanceRequests);
+// Proctor routes
+router.get('/', authMiddleware, requireRole(['proctor']), getAllClearanceRequests);
 
 router.patch(
   '/:id/library',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['proctor']),
   [param('id').isMongoId()],
   validationResultHandler,
   approveLibrary
@@ -40,7 +40,7 @@ router.patch(
 router.patch(
   '/:id/cafeteria',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['proctor']),
   [param('id').isMongoId()],
   validationResultHandler,
   approveCafeteria
@@ -49,7 +49,7 @@ router.patch(
 router.patch(
   '/:id/proctor',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['proctor']),
   [param('id').isMongoId()],
   validationResultHandler,
   approveProctor
@@ -58,7 +58,7 @@ router.patch(
 router.patch(
   '/:id/security',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['proctor']),
   [param('id').isMongoId()],
   validationResultHandler,
   approveSecurity
