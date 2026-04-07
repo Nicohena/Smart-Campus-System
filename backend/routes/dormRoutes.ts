@@ -13,14 +13,11 @@ import { validationResultHandler } from './validationHelpers';
 
 const router = Router();
 
-// Student routes
-router.get('/my-dorm', authMiddleware, requireRole(['student']), getStudentDorm);
-
-// Staff/Admin routes
+// Proctor routes
 router.post(
   '/allocate',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['proctor']),
   [
     body('studentId').isString().trim(),
     body('yearLevel').isString().trim(),
@@ -34,7 +31,7 @@ router.post(
 router.post(
   '/issue-key',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['proctor']),
   [body('dormId').isMongoId(), body('issuedTo').isMongoId(), body('keyNumber').isString().trim()],
   validationResultHandler,
   issueDormKey
@@ -43,7 +40,7 @@ router.post(
 router.patch(
   '/return-key',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['proctor']),
   [body('keyId').isMongoId()],
   validationResultHandler,
   returnDormKey
@@ -52,7 +49,7 @@ router.patch(
 router.post(
   '/inspect',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['proctor']),
   [
     body('dormId').isMongoId(),
     body('conditions').isObject(),
@@ -67,7 +64,7 @@ router.post(
 router.get(
   '/inspections',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['proctor']),
   [query('dormId').optional().isMongoId(), query('studentId').optional().isString().trim()],
   validationResultHandler,
   getDormInspectionHistory

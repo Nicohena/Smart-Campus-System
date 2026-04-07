@@ -152,7 +152,7 @@ export function DormManagement() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Dorm Management" description="Allocate dorms, manage key circulation, record inspections, and query inspection history." />
+      <PageHeader title="Proctor Dorm Management" description="Manage dorm allocation, key circulation, inspections, and damage follow-up from the proctor office." />
 
       {message ? <EmptyState title="Action completed" description={message} /> : null}
       {error ? <EmptyState title="Dorm action needs attention" description={error} /> : null}

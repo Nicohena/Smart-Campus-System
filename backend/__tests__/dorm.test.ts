@@ -15,9 +15,9 @@ describe('Dorm Management Module', () => {
     expect(response.status).toBe(403);
   });
 
-  it('should allocate dorm to student and allow student to view assigned dorm', async () => {
-    const { user: student, token: studentToken } = await createAndLogin(app, 'student');
-    const { token: staffToken } = await createAndLogin(app, 'staff');
+  it('should allow proctor staff to allocate a dorm to a student', async () => {
+    const { user: student } = await createAndLogin(app, 'student');
+    const { token: proctorToken } = await createAndLogin(app, 'proctor');
 
     await Dorm.create({
       block: 'A',
@@ -30,23 +30,16 @@ describe('Dorm Management Module', () => {
 
     const allocate = await request(app)
       .post('/api/dorm/allocate')
-      .set(authHeader(staffToken))
+      .set(authHeader(proctorToken))
       .send({ studentId: student.studentId, yearLevel: 'freshman' });
 
     expect(allocate.status).toBe(201);
-    const dormId = allocate.body.data.dorm._id;
-
-    const myDorm = await request(app)
-      .get('/api/dorm/my-dorm')
-      .set(authHeader(studentToken));
-
-    expect(myDorm.status).toBe(200);
-    expect(myDorm.body.data.dorm._id).toBe(dormId);
+    expect(allocate.body).toHaveProperty('data.dorm');
   });
 
-  it('should issue and return a dorm key', async () => {
+  it('should allow proctor staff to issue and return a dorm key', async () => {
     const { user: student } = await createAndLogin(app, 'student');
-    const { token: staffToken } = await createAndLogin(app, 'staff');
+    const { token: proctorToken } = await createAndLogin(app, 'proctor');
 
     const dorm = await Dorm.create({
       block: 'B',
@@ -59,7 +52,7 @@ describe('Dorm Management Module', () => {
 
     const issueKey = await request(app)
       .post('/api/dorm/issue-key')
-      .set(authHeader(staffToken))
+      .set(authHeader(proctorToken))
       .send({ dormId: dorm._id, issuedTo: student._id, keyNumber: 'KEY-1' });
 
     expect(issueKey.status).toBe(201);
@@ -67,7 +60,7 @@ describe('Dorm Management Module', () => {
 
     const returnKey = await request(app)
       .patch('/api/dorm/return-key')
-      .set(authHeader(staffToken))
+      .set(authHeader(proctorToken))
       .send({ keyId });
 
     expect(returnKey.status).toBe(200);
