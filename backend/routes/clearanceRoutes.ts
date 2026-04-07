@@ -7,7 +7,9 @@ import {
   approveLibrary,
   approveCafeteria,
   approveProctor,
-  approveSecurity
+  approveSecurity,
+  approveDepartment,
+  getDepartmentClearanceRequests
 } from '../controllers/clearanceController';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { validationResultHandler } from './validationHelpers';
@@ -27,6 +29,17 @@ router.get('/my-clearance', authMiddleware, requireRole(['student']), getMyClear
 
 // Proctor routes
 router.get('/', authMiddleware, requireRole(['proctor']), getAllClearanceRequests);
+
+// Department routes
+router.get('/department', authMiddleware, requireRole(['department']), getDepartmentClearanceRequests);
+router.patch(
+  '/:id/department',
+  authMiddleware,
+  requireRole(['department']),
+  [param('id').isMongoId()],
+  validationResultHandler,
+  approveDepartment
+);
 
 router.patch(
   '/:id/library',

@@ -8,6 +8,7 @@ import { sendSuccess, sendError, isValidId } from '../utils/response';
 
 const areAllApprovalsComplete = (clearance: IClearance): boolean => {
   return (
+    clearance.departmentApproval.status &&
     clearance.libraryApproval.status &&
     clearance.cafeteriaApproval.status &&
     clearance.proctorApproval.status &&
@@ -86,7 +87,7 @@ export const getAllClearanceRequests = async (req: Request, res: Response): Prom
 
     const [records, total] = await Promise.all([
       Clearance.find()
-        .populate('student', 'name studentId email role')
+        .populate('student', 'name studentId email role department')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
@@ -95,9 +96,32 @@ export const getAllClearanceRequests = async (req: Request, res: Response): Prom
 
     sendSuccess(res, 'Clearance records fetched', { records, total, page, limit });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Get all clearance error:', error);
     sendError(res, 'Could not fetch clearance records');
+  }
+};
+
+// GET /api/clearance/department
+export const getDepartmentClearanceRequests = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const departmentName = req.user?.department;
+    if (!departmentName) {
+      sendError(res, 'Department not associated with user', 400);
+      return;
+    }
+
+    // Find students belonging to this department
+    const studentsInDept = await User.find({ department: departmentName, role: 'student' }).select('_id');
+    const studentIds = studentsInDept.map(s => s._id);
+
+    const records = await Clearance.find({ student: { $in: studentIds } })
+      .populate('student', 'name studentId email role department')
+      .sort({ createdAt: -1 });
+
+    sendSuccess(res, 'Department clearance records fetched', { records });
+  } catch (error) {
+    console.error('Get department clearance error:', error);
+    sendError(res, 'Could not fetch department clearance records');
   }
 };
 
@@ -105,6 +129,7 @@ const markApproval = async (
   req: Request,
   res: Response,
   section:
+    | 'departmentApproval'
     | 'libraryApproval'
     | 'cafeteriaApproval'
     | 'proctorApproval'
@@ -138,15 +163,15 @@ const markApproval = async (
   }
 
   // Enforce approval order: Library -> Cafeteria -> Proctor -> Security
-  if (section === 'cafeteriaApproval' && !clearance.libraryApproval.status) {
-    sendError(res, 'Library approval is required before cafeteria approval', 400);
+  if (section === 'cafeteriaApproval' && (!clearance.libraryApproval.status || !clearance.departmentApproval.status)) {
+    sendError(res, 'Library and Department approvals are required before cafeteria approval', 400);
     return;
   }
   if (
     section === 'proctorApproval' &&
-    (!clearance.libraryApproval.status || !clearance.cafeteriaApproval.status)
+    (!clearance.departmentApproval.status || !clearance.libraryApproval.status || !clearance.cafeteriaApproval.status)
   ) {
-    sendError(res, 'Library and cafeteria approvals are required before proctor approval', 400);
+    sendError(res, 'Department, Library and Cafeteria approvals are required before proctor approval', 400);
     return;
   }
   if (section === 'proctorApproval') {
@@ -239,8 +264,17 @@ export const approveSecurity = async (req: Request, res: Response): Promise<void
   try {
     await markApproval(req, res, 'securityApproval');
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Approve security error:', error);
     sendError(res, 'Could not approve security clearance');
+  }
+};
+
+// PATCH /api/clearance/:id/department
+export const approveDepartment = async (req: Request, res: Response): Promise<void> => {
+  try {
+    await markApproval(req, res, 'departmentApproval');
+  } catch (error) {
+    console.error('Approve department error:', error);
+    sendError(res, 'Could not approve department clearance');
   }
 };

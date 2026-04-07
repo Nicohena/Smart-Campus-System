@@ -13,6 +13,7 @@ export interface IClearance extends Document {
   studentId: string;
   academicYear: string;
   status: ClearanceStatus;
+  departmentApproval: ClearanceApproval;
   libraryApproval: ClearanceApproval;
   cafeteriaApproval: ClearanceApproval;
   proctorApproval: ClearanceApproval;
@@ -39,6 +40,7 @@ const ClearanceSchema: Schema<IClearance> = new Schema(
       enum: ['pending', 'in_progress', 'approved', 'rejected'],
       default: 'pending'
     },
+    departmentApproval: { type: ClearanceApprovalSchema, default: () => ({}) },
     libraryApproval: { type: ClearanceApprovalSchema, default: () => ({}) },
     cafeteriaApproval: { type: ClearanceApprovalSchema, default: () => ({}) },
     proctorApproval: { type: ClearanceApprovalSchema, default: () => ({}) },

@@ -10,7 +10,7 @@ import { STAFF_ROLES, UserRole } from '../utils/roles';
 // Creates a new user. Only staff/admin should be allowed to call this route
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, studentId, password, department } = req.body;
+    const { name, studentId, password, department, email, year, section } = req.body;
     const requesterRole = req.user?.role;
     const requestedRole = req.body.role as UserRole | undefined;
 
@@ -45,7 +45,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user = new User({ name, studentId, password, role, department });
+    const user = new User({ name, studentId, password, role, department, email, year, section });
     await user.save();
 
     const userObj = user.toObject();
@@ -232,5 +232,49 @@ export const listUsers = async (_req: Request, res: Response): Promise<void> => 
     // eslint-disable-next-line no-console
     console.error('List users error:', error);
     sendError(res, 'Could not fetch users');
+  }
+};
+
+// GET /api/auth/users/:id
+export const getUserById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) {
+      sendError(res, 'User not found', 404);
+      return;
+    }
+    sendSuccess(res, 'User details fetched', { user });
+  } catch (error) {
+    console.error('Get user error:', error);
+    sendError(res, 'Could not fetch user');
+  }
+};
+
+// PATCH /api/auth/users/:id
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, email, year, section, department, isActive } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      sendError(res, 'User not found', 404);
+      return;
+    }
+    
+    if (name !== undefined) user.name = name;
+    if (email !== undefined) user.email = email;
+    if (year !== undefined) user.year = year;
+    if (section !== undefined) user.section = section;
+    if (department !== undefined) user.department = department;
+    if (isActive !== undefined) user.isActive = isActive;
+    
+    await user.save();
+    
+    const userObj = user.toObject();
+    delete (userObj as any).password;
+    
+    sendSuccess(res, 'User updated successfully', { user: userObj });
+  } catch (error) {
+    console.error('Update user error:', error);
+    sendError(res, 'Could not update user');
   }
 };

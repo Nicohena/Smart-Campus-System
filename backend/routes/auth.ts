@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { body } from 'express-validator';
-import { login, register, profile, refreshToken, logout, listUsers } from '../controllers/authController';
+import { login, register, profile, refreshToken, logout, listUsers, getUserById, updateUser } from '../controllers/authController';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { validationResultHandler } from './validationHelpers';
 import { STAFF_ROLES } from '../utils/roles';
@@ -44,6 +44,8 @@ router.post(
 // Profile for logged-in user
 router.get('/profile', authMiddleware, profile);
 router.get('/users', authMiddleware, requireRole(['department', 'admin']), listUsers);
+router.get('/users/:id', authMiddleware, requireRole(['department', 'admin']), [param('id').isMongoId()], validationResultHandler, getUserById);
+router.patch('/users/:id', authMiddleware, requireRole(['department', 'admin']), [param('id').isMongoId()], validationResultHandler, updateUser);
 
 // Refresh token endpoint
 router.post('/refresh', [body('refreshToken').optional().isString().trim()], validationResultHandler, refreshToken);

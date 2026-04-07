@@ -3,6 +3,7 @@ import Complaint from '../models/Complaint';
 import Issue from '../models/Issue';
 import DormInspection from '../models/DormInspection';
 import Clearance from '../models/Clearance';
+import User from '../models/User';
 import { generateCampusInsights } from '../services/aiAnalyticsService';
 import { sendSuccess, sendError } from '../utils/response';
 
@@ -117,5 +118,57 @@ export const getAiInsights = async (req: Request, res: Response): Promise<void> 
     // eslint-disable-next-line no-console
     console.error('AI insights error:', error);
     sendError(res, 'Could not generate AI insights', 502);
+  }
+};
+
+// GET /api/analytics/department
+export const getDepartmentAnalytics = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const departmentName = req.user?.department;
+    if (!departmentName) {
+      sendError(res, 'No department assigned', 400);
+      return;
+    }
+
+    // 1. Total students in department
+    const students = await User.find({ role: 'student', department: departmentName }).select('_id year');
+    const totalStudents = students.length;
+    const studentIds = students.map(s => s._id);
+
+    // 2. By year
+    const studentsByYear = students.reduce((acc: any, student) => {
+      const year = student.year || 'Unknown';
+      acc[year] = (acc[year] || 0) + 1;
+      return acc;
+    }, {});
+    const byYear = Object.keys(studentsByYear).map(key => ({ _id: key, count: studentsByYear[key] }));
+
+    // 3. active issues/complaints
+    const [issues, complaints, clearances] = await Promise.all([
+      Issue.distinct('student', { student: { $in: studentIds }, status: { $ne: 'resolved' } }),
+      Complaint.distinct('student', { student: { $in: studentIds }, status: { $ne: 'resolved' } }),
+      Clearance.find({ student: { $in: studentIds } })
+    ]);
+
+    const activeIssuesOrComplaintsStudents = new Set([...issues.map(id => id.toString()), ...complaints.map(id => id.toString())]).size;
+
+    // 4. Clearance rate
+    let completedClearances = 0;
+    if (clearances.length > 0) {
+      completedClearances = clearances.filter(c => c.status === 'approved').length;
+    }
+    const clearanceCompletionRate = totalStudents > 0 ? ((completedClearances / totalStudents) * 100).toFixed(1) : 0;
+
+    sendSuccess(res, 'Department analytics fetched', {
+      totalStudents,
+      byYear,
+      activeIssuesOrComplaintsStudents,
+      clearanceCompletionRate,
+      completedClearances,
+      totalClearances: clearances.length
+    });
+  } catch (error) {
+    console.error('Department analytics error:', error);
+    sendError(res, 'Could not fetch department analytics');
   }
 };

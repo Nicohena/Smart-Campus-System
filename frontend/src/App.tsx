@@ -18,6 +18,13 @@ import { StudentNotices } from "./pages/portal/StudentNotices";
 import { StudentNavigation } from "./pages/portal/StudentNavigation";
 import { StudentAssistant } from "./pages/portal/StudentAssistant";
 
+import { StudentList } from "./features/department/pages/StudentList";
+import { StudentRegistration } from "./features/department/pages/StudentRegistration";
+import { StudentProfileView } from "./features/department/pages/StudentProfile";
+import { StudentEdit } from "./features/department/pages/StudentEdit";
+import { DepartmentClearance } from "./features/department/pages/DepartmentClearance";
+import { DepartmentNotices } from "./features/department/pages/DepartmentNotices";
+
 import { Hero } from "./components/landing/Hero";
 import { Features } from "./components/landing/Features";
 import { Stats } from "./components/landing/Stats";
@@ -112,6 +119,14 @@ function App() {
         <Route path="notices-feed" element={<RoleRoute allowedRoles={["student"]} element={<StudentNotices />} />} />
         <Route path="navigation" element={<RoleRoute allowedRoles={["student"]} element={<StudentNavigation />} />} />
         <Route path="assistant" element={<RoleRoute allowedRoles={["student"]} element={<StudentAssistant />} />} />
+
+        <Route path="department/students" element={<RoleRoute allowedRoles={["department"]} element={<StudentList />} />} />
+        <Route path="department/register" element={<RoleRoute allowedRoles={["department"]} element={<StudentRegistration />} />} />
+        <Route path="department/student/:id" element={<RoleRoute allowedRoles={["department"]} element={<StudentProfileView />} />} />
+        <Route path="department/student/:id/edit" element={<RoleRoute allowedRoles={["department"]} element={<StudentEdit />} />} />
+        <Route path="department/clearances" element={<RoleRoute allowedRoles={["department"]} element={<DepartmentClearance />} />} />
+        <Route path="department/notices" element={<RoleRoute allowedRoles={["department"]} element={<DepartmentNotices />} />} />
+
         <Route path="*" element={<PortalNotFound />} />
       </Route>
     </Routes>

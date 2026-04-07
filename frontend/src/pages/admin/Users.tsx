@@ -24,18 +24,18 @@ interface ProfileUser {
   department?: string;
 }
 
-const emptyForm = {
+const getEmptyForm = (role: string | undefined) => ({
   name: "",
   studentId: "",
   password: "",
-  role: "student" as UserRole,
+  role: (role === "admin" ? STAFF_ROLES[0] : "student") as UserRole,
   department: "",
-};
+});
 
 export function Users() {
   const sessionUser = getStoredUser();
   const [profile, setProfile] = useState<ProfileUser | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(() => getEmptyForm(sessionUser?.role));
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -81,7 +81,7 @@ export function Users() {
       };
       const response = await apiRequest<ApiResponse<{ user: ProfileUser }>>("/auth/register", { method: "POST", body });
       setMessage(`Created ${response.data.user.name} (${response.data.user.role}).`);
-      setForm(emptyForm);
+      setForm(getEmptyForm(sessionUser?.role));
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

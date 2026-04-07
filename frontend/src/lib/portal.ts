@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   TriangleAlert,
   UserCog,
+  UserPlus,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -41,7 +42,10 @@ export const portalNavItems: Record<UserRole, PortalNavItem[]> = {
   ],
   department: [
     { label: "Overview", to: "/portal", icon: LayoutDashboard, end: true },
-    { label: "Students", to: "/portal/users", icon: Users },
+    { label: "Students", to: "/portal/department/students", icon: Users },
+    { label: "Add Student", to: "/portal/department/register", icon: UserPlus },
+    { label: "Clearance", to: "/portal/department/clearances", icon: ClipboardCheck },
+    { label: "Notices", to: "/portal/department/notices", icon: MessageSquareText },
   ],
   student_union: [
     { label: "Overview", to: "/portal", icon: LayoutDashboard, end: true },

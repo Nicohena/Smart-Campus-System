@@ -9,6 +9,10 @@ export interface IUser extends Document {
   password: string;
   role: UserRole;
   department?: string;
+  email?: string;
+  year?: string;
+  section?: string;
+  isActive: boolean;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -19,7 +23,11 @@ const UserSchema: Schema<IUser> = new Schema(
     studentId: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: USER_ROLES, default: 'student' },
-    department: { type: String }
+    department: { type: String },
+    email: { type: String },
+    year: { type: String },
+    section: { type: String },
+    isActive: { type: Boolean, default: true }
   },
   { timestamps: true }
 );
