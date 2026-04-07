@@ -40,8 +40,8 @@ describe('Authentication Module', () => {
     expect(response.status).toBe(403);
   });
 
-  it('should allow staff to register users', async () => {
-    const { token } = await createAndLogin(app, 'staff');
+  it('should allow department staff to register students', async () => {
+    const { token } = await createAndLogin(app, 'department');
 
     const response = await request(app)
       .post('/api/auth/register')
@@ -54,5 +54,23 @@ describe('Authentication Module', () => {
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty('data.user');
+    expect(response.body.data.user.role).toBe('student');
+  });
+
+  it('should allow admin to register staff users', async () => {
+    const { token } = await createAndLogin(app, 'admin');
+
+    const response = await request(app)
+      .post('/api/auth/register')
+      .set(authHeader(token))
+      .send({
+        name: 'Security Officer',
+        studentId: 'SID-REG-3',
+        password: 'Password123!',
+        role: 'security'
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.user.role).toBe('security');
   });
 });

@@ -14,12 +14,13 @@ import {
   getErrorMessage,
   getStoredUser,
 } from "../../components/admin/adminShared";
+import { STAFF_ROLES, titleCaseRole, type UserRole } from "../../lib/roles";
 
 interface ProfileUser {
   _id: string;
   name: string;
   studentId: string;
-  role: "student" | "staff" | "admin";
+  role: UserRole;
   department?: string;
 }
 
@@ -27,7 +28,7 @@ const emptyForm = {
   name: "",
   studentId: "",
   password: "",
-  role: "student",
+  role: "student" as UserRole,
   department: "",
 };
 
@@ -88,11 +89,23 @@ export function Users() {
     }
   };
 
+  const availableRoles: UserRole[] = sessionUser?.role === "admin" ? [...STAFF_ROLES] : ["student"];
+  const panelTitle = sessionUser?.role === "admin" ? "Staff Management" : "Student Registration";
+  const panelDescription =
+    sessionUser?.role === "admin"
+      ? "Admins can create and manage operational staff accounts for security, proctor, department, and student union offices."
+      : "Department staff can register students and maintain department-owned student records.";
+  const submitLabel = sessionUser?.role === "admin" ? "Create staff account" : "Register student";
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Users"
-        description="Inspect the current auth session and create new users with the existing registration endpoint."
+        title={sessionUser?.role === "admin" ? "User Management" : "Student Registry"}
+        description={
+          sessionUser?.role === "admin"
+            ? "Create and manage staff accounts without exposing operational tools to the admin workspace."
+            : "Department staff register students, capture department data, and review the current session."
+        }
         actions={
           <ActionButton type="button" variant="primary" onClick={loadProfile} disabled={loading}>
             {loading ? "Refreshing..." : "Refresh profile"}
@@ -113,14 +126,18 @@ export function Users() {
               </div>
               <p>{profile.studentId}</p>
               <p>{profile.department || "No department set"}</p>
-              <p className="text-xs text-zinc-500">Only admins can choose a non-student role during registration.</p>
+              <p className="text-xs text-zinc-500">
+                {sessionUser?.role === "admin"
+                  ? "Admin accounts can create staff users only. Operational work stays inside each role dashboard."
+                  : "Department accounts can create student users only. Students cannot self-register."}
+              </p>
             </div>
           ) : (
             <EmptyState title="No profile loaded" description="Refresh the current session profile to verify auth state." />
           )}
         </Panel>
 
-        <Panel title="Register User" description="Staff can create student accounts. Admins can also set staff and admin roles.">
+        <Panel title={panelTitle} description={panelDescription}>
           <form className="space-y-4" onSubmit={registerUser}>
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Name">
@@ -138,23 +155,30 @@ export function Users() {
                   required
                 />
               </Field>
-              <Field label="Department">
+              <Field label="Department" hint="Optional for staff, recommended for student records.">
                 <TextInput value={form.department} onChange={(event) => setForm((current) => ({ ...current, department: event.target.value }))} />
               </Field>
-              {sessionUser?.role === "admin" ? (
+              {availableRoles.length > 1 ? (
                 <Field label="Role">
-                  <Select value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}>
-                    {["student", "staff", "admin"].map((role) => (
+                  <Select
+                    value={form.role}
+                    onChange={(event) => setForm((current) => ({ ...current, role: event.target.value as UserRole }))}
+                  >
+                    {availableRoles.map((role) => (
                       <option key={role} value={role}>
-                        {role}
+                        {titleCaseRole(role)}
                       </option>
                     ))}
                   </Select>
                 </Field>
-              ) : null}
+              ) : (
+                <Field label="Role">
+                  <TextInput value="Student" readOnly />
+                </Field>
+              )}
             </div>
             <ActionButton type="submit" variant="primary" disabled={submitting}>
-              {submitting ? "Creating..." : "Register user"}
+              {submitting ? "Saving..." : submitLabel}
             </ActionButton>
             <p className="text-xs text-zinc-500">Password must be at least 8 characters.</p>
           </form>

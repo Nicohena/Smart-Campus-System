@@ -4,18 +4,37 @@ import RefreshToken from '../models/RefreshToken';
 import { sendSuccess, sendError } from '../utils/response';
 import { config } from '../config';
 import { signAccessToken, generateRefreshToken } from '../utils/tokenService';
+import { STAFF_ROLES, UserRole } from '../utils/roles';
 
 // POST /api/auth/register
 // Creates a new user. Only staff/admin should be allowed to call this route
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, studentId, password, department } = req.body;
-    // Only admins can choose a role; staff can only create student accounts
-    const role: 'student' | 'staff' | 'admin' =
-      req.user?.role === 'admin' ? (req.body.role ?? 'student') : 'student';
+    const requesterRole = req.user?.role;
+    const requestedRole = req.body.role as UserRole | undefined;
+
+    if (!requesterRole) {
+      sendError(res, 'Unauthorized', 401);
+      return;
+    }
 
     if (!name || !studentId || !password) {
       sendError(res, 'Missing required fields', 400);
+      return;
+    }
+
+    let role: UserRole;
+    if (requesterRole === 'department') {
+      role = 'student';
+    } else if (requesterRole === 'admin') {
+      role = requestedRole ?? 'department';
+      if (!STAFF_ROLES.includes(role)) {
+        sendError(res, 'Admins can only create staff users', 403);
+        return;
+      }
+    } else {
+      sendError(res, 'Forbidden', 403);
       return;
     }
 
@@ -205,7 +224,9 @@ export const profile = async (req: Request, res: Response): Promise<void> => {
 // Staff/admin can fetch users for assignment and admin tasks
 export const listUsers = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    const role = _req.user?.role;
+    const filter = role === 'department' ? { role: 'student' } : {};
+    const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
     sendSuccess(res, 'Users fetched', { users });
   } catch (error) {
     // eslint-disable-next-line no-console

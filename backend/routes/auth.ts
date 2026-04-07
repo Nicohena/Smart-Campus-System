@@ -4,6 +4,7 @@ import { body } from 'express-validator';
 import { login, register, profile, refreshToken, logout, listUsers } from '../controllers/authController';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { validationResultHandler } from './validationHelpers';
+import { STAFF_ROLES } from '../utils/roles';
 
 const router = Router();
 
@@ -24,15 +25,17 @@ router.post(
 	login
 );
 
-// Register new users - only staff or admin can create users
+// Department creates students, admin creates staff users
 router.post(
 	'/register',
 	authMiddleware,
-	requireRole(['staff', 'admin']),
+	requireRole(['department', 'admin']),
 	[
 		body('name').isString().trim().escape(),
 		body('studentId').isString().trim().escape(),
-		body('password').isLength({ min: 8 })
+		body('password').isLength({ min: 8 }),
+    body('department').optional().isString().trim().escape(),
+    body('role').optional().isIn(STAFF_ROLES)
 	],
 	validationResultHandler,
 	register
@@ -40,7 +43,7 @@ router.post(
 
 // Profile for logged-in user
 router.get('/profile', authMiddleware, profile);
-router.get('/users', authMiddleware, requireRole(['staff', 'admin']), listUsers);
+router.get('/users', authMiddleware, requireRole(['department', 'admin']), listUsers);
 
 // Refresh token endpoint
 router.post('/refresh', [body('refreshToken').optional().isString().trim()], validationResultHandler, refreshToken);

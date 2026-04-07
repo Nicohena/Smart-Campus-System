@@ -8,7 +8,7 @@ interface CreateUserInput {
   name?: string;
   studentId?: string;
   password?: string;
-  role?: 'student' | 'staff' | 'admin';
+  role?: 'admin' | 'security' | 'proctor' | 'department' | 'student_union' | 'student';
   department?: string;
 }
 
@@ -37,7 +37,7 @@ export const loginUser = async (
 
 export const createAndLogin = async (
   app: Application,
-  role: 'student' | 'staff' | 'admin' = 'student',
+  role: 'admin' | 'security' | 'proctor' | 'department' | 'student_union' | 'student' = 'student',
   overrides: CreateUserInput = {}
 ): Promise<{ user: IUser; token: string }> => {
   const password = overrides.password || 'Password123!';
