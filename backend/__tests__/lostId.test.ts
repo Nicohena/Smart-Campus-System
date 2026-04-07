@@ -26,15 +26,15 @@ describe('Lost ID Replacement Module', () => {
     expect(list.body.data.requests.length).toBe(1);
   });
 
-  it('should allow staff to view all lost ID requests', async () => {
+  it('should allow department staff to view all lost ID requests', async () => {
     const { token: studentToken } = await createAndLogin(app, 'student');
-    const { token: staffToken } = await createAndLogin(app, 'staff');
+    const { token: departmentToken } = await createAndLogin(app, 'department');
 
     await request(app).post('/api/lost-id/request').set(authHeader(studentToken)).send({});
 
     const response = await request(app)
       .get('/api/lost-id')
-      .set(authHeader(staffToken));
+      .set(authHeader(departmentToken));
 
     expect(response.status).toBe(200);
     expect(response.body.data.requests.length).toBe(1);

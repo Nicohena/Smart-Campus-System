@@ -21,11 +21,11 @@ router.get('/department/:department', authMiddleware, getDepartmentNotices);
 router.get('/dorm/:block', authMiddleware, getDormNotices);
 router.get('/:id', authMiddleware, [param('id').isMongoId()], validationResultHandler, getNoticeById);
 
-// Staff/Admin routes
+// Admin configuration routes
 router.post(
   '/',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['admin']),
   [
     body('title').isString().trim(),
     body('description').isString().trim(),
@@ -42,7 +42,7 @@ router.post(
 router.patch(
   '/:id',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['admin']),
   [param('id').isMongoId()],
   validationResultHandler,
   updateNotice
@@ -51,7 +51,7 @@ router.patch(
 router.delete(
   '/:id',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['admin']),
   [param('id').isMongoId()],
   validationResultHandler,
   deleteNotice
@@ -60,7 +60,7 @@ router.delete(
 router.patch(
   '/:id/status',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['admin']),
   [param('id').isMongoId(), body('status').isString().trim()],
   validationResultHandler,
   setNoticeStatus

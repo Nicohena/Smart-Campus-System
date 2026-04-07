@@ -130,7 +130,7 @@ export function Locations() {
     <div className="space-y-6">
       <PageHeader
         title="Locations"
-        description="Manage campus navigation records and use the server search endpoint for quick filtering."
+        description="Maintain the shared campus navigation directory used by student-facing wayfinding tools."
         actions={
           <>
             <TextInput value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name or building" />

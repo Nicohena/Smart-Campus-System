@@ -3,12 +3,12 @@ import app from '../server';
 import { createAndLogin, authHeader } from './helpers/testUtils';
 
 describe('Campus Navigation Module', () => {
-  it('should allow staff to create, update, and delete a location', async () => {
-    const { token: staffToken } = await createAndLogin(app, 'staff');
+  it('should allow admin to create, update, and delete a location', async () => {
+    const { token: adminToken } = await createAndLogin(app, 'admin');
 
     const create = await request(app)
       .post('/api/navigation')
-      .set(authHeader(staffToken))
+      .set(authHeader(adminToken))
       .send({
         name: 'Library',
         description: 'Main campus library',
@@ -23,25 +23,25 @@ describe('Campus Navigation Module', () => {
 
     const update = await request(app)
       .patch(`/api/navigation/${locationId}`)
-      .set(authHeader(staffToken))
+      .set(authHeader(adminToken))
       .send({ description: 'Updated description' });
 
     expect(update.status).toBe(200);
 
     const del = await request(app)
       .delete(`/api/navigation/${locationId}`)
-      .set(authHeader(staffToken));
+      .set(authHeader(adminToken));
 
     expect(del.status).toBe(200);
   });
 
   it('should allow students to view locations', async () => {
-    const { token: staffToken } = await createAndLogin(app, 'staff');
+    const { token: adminToken } = await createAndLogin(app, 'admin');
     const { token: studentToken } = await createAndLogin(app, 'student');
 
     await request(app)
       .post('/api/navigation')
-      .set(authHeader(staffToken))
+      .set(authHeader(adminToken))
       .send({
         name: 'Cafeteria',
         description: 'Dining hall',
@@ -57,11 +57,11 @@ describe('Campus Navigation Module', () => {
   });
 
   it('should reject invalid location creation', async () => {
-    const { token: staffToken } = await createAndLogin(app, 'staff');
+    const { token: adminToken } = await createAndLogin(app, 'admin');
 
     const response = await request(app)
       .post('/api/navigation')
-      .set(authHeader(staffToken))
+      .set(authHeader(adminToken))
       .send({ name: 'Invalid' });
 
     expect(response.status).toBe(400);

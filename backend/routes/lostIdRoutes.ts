@@ -18,13 +18,13 @@ const router = Router();
 router.post('/request', authMiddleware, requireRole(['student']), submitLostIdRequest);
 router.get('/my-requests', authMiddleware, requireRole(['student']), getMyLostIdRequests);
 
-// Staff/Admin routes
-router.get('/', authMiddleware, requireRole(['staff', 'admin']), getAllLostIdRequests);
+// Operational staff routes
+router.get('/', authMiddleware, requireRole(['department', 'proctor', 'security']), getAllLostIdRequests);
 
 router.patch(
   '/:id/stamp',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['department', 'proctor', 'security']),
   [
     param('id').isMongoId(),
     body('stamp').optional().isString().trim(),
@@ -38,7 +38,7 @@ router.patch(
 router.patch(
   '/:id/approve',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['department', 'proctor', 'security']),
   [param('id').isMongoId()],
   validationResultHandler,
   approveLostIdRequest
@@ -47,7 +47,7 @@ router.patch(
 router.patch(
   '/:id/reject',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['department', 'proctor', 'security']),
   [param('id').isMongoId(), body('remarks').isString().trim()],
   validationResultHandler,
   rejectLostIdRequest
@@ -56,7 +56,7 @@ router.patch(
 router.patch(
   '/:id/temporary-id',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['department', 'proctor', 'security']),
   [param('id').isMongoId()],
   validationResultHandler,
   issueTemporaryId

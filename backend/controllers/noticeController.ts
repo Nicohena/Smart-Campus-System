@@ -174,7 +174,7 @@ export const setNoticeStatus = async (req: Request, res: Response): Promise<void
 // Students view active notices
 export const getAllNotices = async (req: Request, res: Response): Promise<void> => {
   try {
-    const isPrivileged = req.user?.role === 'staff' || req.user?.role === 'admin';
+    const isPrivileged = req.user?.role === 'admin';
     const now = new Date();
     const notices = isPrivileged
       ? await Notice.find().sort({ createdAt: -1 })

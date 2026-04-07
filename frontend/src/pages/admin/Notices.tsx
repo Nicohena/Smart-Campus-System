@@ -136,7 +136,7 @@ export function Notices() {
     <div className="space-y-6">
       <PageHeader
         title="Notices"
-        description="Create, edit, activate, expire, and remove notices using the existing notice routes."
+        description="Publish campus-wide notices and control their lifecycle from the admin communications workspace."
         actions={
           <ActionButton type="button" variant="primary" onClick={loadNotices} disabled={loading}>
             {loading ? "Refreshing..." : "Refresh"}
@@ -206,7 +206,7 @@ export function Notices() {
           </form>
         </Panel>
 
-        <Panel title="Published Notices" description="Staff and admin sessions now receive the full notice list from the backend.">
+        <Panel title="Published Notices" description="Admin sessions receive the full notice list from the backend for central communications management.">
           {notices.length ? (
             <div className="space-y-4">
               {notices.map((notice) => (

@@ -37,11 +37,11 @@ router.get(
 router.get('/category/:category', authMiddleware, [param('category').isString().trim()], validationResultHandler, getLocationsByCategory);
 router.get('/:id', authMiddleware, [param('id').isMongoId()], validationResultHandler, getLocationById);
 
-// Admin/Staff routes
+// Admin configuration routes
 router.post(
   '/',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['admin']),
   [
     body('name').isString().trim(),
     body('description').isString().trim(),
@@ -62,7 +62,7 @@ router.post(
 router.patch(
   '/:id',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['admin']),
   [param('id').isMongoId()],
   validationResultHandler,
   updateLocation
@@ -71,7 +71,7 @@ router.patch(
 router.delete(
   '/:id',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['admin']),
   [param('id').isMongoId()],
   validationResultHandler,
   deleteLocation
