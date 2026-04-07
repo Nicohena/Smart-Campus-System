@@ -7,7 +7,7 @@ jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('AI Analytics Module', () => {
-  it('should require staff/admin for analytics endpoints', async () => {
+  it('should require admin access for analytics endpoints', async () => {
     const { token } = await createAndLogin(app, 'student');
 
     const response = await request(app)
@@ -18,7 +18,7 @@ describe('AI Analytics Module', () => {
   });
 
   it('should return AI insights with mocked DeepSeek', async () => {
-    const { token } = await createAndLogin(app, 'staff');
+    const { token } = await createAndLogin(app, 'admin');
     mockedAxios.post.mockResolvedValueOnce({
       data: {
         choices: [{ message: { content: '1. Insight A\n2. Insight B' } }]

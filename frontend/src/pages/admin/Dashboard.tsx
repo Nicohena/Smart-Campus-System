@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { apiRequest } from "../../api/client";
 import { StatCard } from "../../components/admin/StatCard";
 import {
@@ -59,8 +59,8 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Dashboard"
-        description="Live operational analytics and overview."
+        title="Admin Overview"
+        description="Global analytics for the whole campus system. Operational actions are handled inside each staff dashboard."
         actions={
           <ActionButton type="button" onClick={loadDashboard} disabled={loading} variant="primary">
             {loading ? "Refreshing..." : "Refresh dashboard"}

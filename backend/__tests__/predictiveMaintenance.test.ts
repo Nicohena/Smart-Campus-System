@@ -7,7 +7,7 @@ jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('AI Predictive Maintenance Module', () => {
-  it('should restrict predictions to staff/admin', async () => {
+  it('should restrict predictions to admin', async () => {
     const { token } = await createAndLogin(app, 'student');
 
     const response = await request(app)

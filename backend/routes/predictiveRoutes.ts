@@ -4,11 +4,11 @@ import { authMiddleware, requireRole } from '../middleware/auth';
 
 const router = Router();
 
-// Staff/admin-only predictive maintenance endpoint
+// Admin-only predictive maintenance endpoint
 router.get(
   '/maintenance',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['admin']),
   getMaintenancePredictions
 );
 
