@@ -32,9 +32,9 @@ describe('Complaints System Module', () => {
     expect(response.status).toBe(400);
   });
 
-  it('should allow staff to update complaint status', async () => {
+  it('should allow student union staff to update complaint status', async () => {
     const { token: studentToken } = await createAndLogin(app, 'student');
-    const { token: staffToken } = await createAndLogin(app, 'staff');
+    const { token: unionToken } = await createAndLogin(app, 'student_union');
 
     const submit = await request(app)
       .post('/api/complaints')
@@ -45,7 +45,7 @@ describe('Complaints System Module', () => {
 
     const update = await request(app)
       .patch(`/api/complaints/${complaintId}/status`)
-      .set(authHeader(staffToken))
+      .set(authHeader(unionToken))
       .send({ status: 'under_review' });
 
     expect(update.status).toBe(200);

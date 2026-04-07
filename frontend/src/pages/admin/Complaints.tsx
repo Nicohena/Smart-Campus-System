@@ -104,8 +104,8 @@ export function Complaints() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Complaints"
-        description="Track complaint status, set priority, and assign handlers using the server complaint workflow."
+        title="Student Union Complaints"
+        description="Review submitted complaints, coordinate responses, and escalate cases through the student union workflow."
         actions={
           <ActionButton type="button" variant="primary" onClick={loadComplaints} disabled={loading}>
             {loading ? "Refreshing..." : "Refresh"}

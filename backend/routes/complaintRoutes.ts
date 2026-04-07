@@ -29,13 +29,13 @@ router.post(
 
 router.get('/my', authMiddleware, requireRole(['student']), getMyComplaints);
 
-// Staff/Admin routes
-router.get('/', authMiddleware, requireRole(['staff', 'admin']), getAllComplaints);
+// Student union routes
+router.get('/', authMiddleware, requireRole(['student_union']), getAllComplaints);
 
 router.patch(
   '/:id/status',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['student_union']),
   [param('id').isMongoId(), body('status').isString().trim()],
   validationResultHandler,
   updateComplaintStatus
@@ -44,7 +44,7 @@ router.patch(
 router.patch(
   '/:id/assign',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['student_union']),
   [param('id').isMongoId(), body('handledBy').isMongoId()],
   validationResultHandler,
   assignComplaintHandler
@@ -53,7 +53,7 @@ router.patch(
 router.patch(
   '/:id/priority',
   authMiddleware,
-  requireRole(['staff', 'admin']),
+  requireRole(['student_union']),
   [param('id').isMongoId(), body('priority').isString().trim()],
   validationResultHandler,
   setComplaintPriority
