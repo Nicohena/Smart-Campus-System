@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { Sidebar } from "../../components/admin/Sidebar";
 import { Topbar } from "../../components/admin/Topbar";
-import { EmptyState, getStoredUser } from "../../components/admin/adminShared";
+import { getStoredUser } from "../../components/admin/adminShared";
 
 export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -11,19 +11,6 @@ export function AdminLayout() {
 
   if (!token || !user) {
     return <Navigate to="/login" replace />;
-  }
-
-  if (user.role === "student") {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-black px-6 font-sans">
-        <div className="w-full max-w-xl">
-          <EmptyState
-            title="Admin access is required"
-            description="This area is reserved for staff and admin workflows. Sign in with a staff or admin account to continue."
-          />
-        </div>
-      </div>
-    );
   }
 
   return (

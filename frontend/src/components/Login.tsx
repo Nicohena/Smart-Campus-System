@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Key, Hash, ArrowRight, Loader2 } from "lucide-react"
 import { authApi } from "../api/auth"
+import { getDefaultRouteForRole } from "../lib/portal"
 
 export function Login() {
   const navigate = useNavigate()
@@ -26,8 +27,7 @@ export function Login() {
       localStorage.setItem("token", data.data.token)
       localStorage.setItem("user", JSON.stringify(data.data.user))
 
-      // Redirect to dashboard
-      navigate("/admin")
+      navigate(getDefaultRouteForRole(data.data.user.role))
     } catch (err: any) {
       setError(err.message || "Login failed. Please try again.")
     } finally {

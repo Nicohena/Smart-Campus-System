@@ -2,6 +2,7 @@ import { LogOut, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../../api/auth";
 import { ActionButton, clearSession, getStoredUser } from "./adminShared";
+import { titleCaseRole } from "../../lib/roles";
 
 interface TopbarProps {
   setSidebarOpen: (value: boolean) => void;
@@ -35,7 +36,7 @@ export function Topbar({ setSidebarOpen }: TopbarProps) {
         <div>
           <p className="text-sm font-medium text-white">{user?.name ?? "Signed in"}</p>
           <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">
-            {user?.role ?? "session"} {user?.studentId ? `• ${user.studentId}` : ""}
+            {user ? titleCaseRole(user.role) : "Session"} {user?.studentId ? `• ${user.studentId}` : ""}
           </p>
         </div>
       </div>

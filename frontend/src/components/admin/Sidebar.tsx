@@ -1,38 +1,18 @@
 import { NavLink } from "react-router-dom";
-import {
-  Building2,
-  ClipboardCheck,
-  CreditCard,
-  LayoutDashboard,
-  MapPinned,
-  Megaphone,
-  ShieldUser,
-  Smartphone,
-  TriangleAlert,
-  Wrench,
-  X,
-} from "lucide-react";
-import { classNames } from "./adminShared";
+import { X } from "lucide-react";
+import { classNames, getStoredUser } from "./adminShared";
+import { getNavItemsForRole } from "../../lib/portal";
+import { titleCaseRole } from "../../lib/roles";
 
 interface SidebarProps {
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
 }
 
-const navItems = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/admin/complaints", label: "Complaints", icon: TriangleAlert },
-  { to: "/admin/issues", label: "Issues", icon: Wrench },
-  { to: "/admin/clearances", label: "Clearances", icon: ClipboardCheck },
-  { to: "/admin/lost-id", label: "Lost IDs", icon: CreditCard },
-  { to: "/admin/notices", label: "Notices", icon: Megaphone },
-  { to: "/admin/dorms", label: "Dorms", icon: Building2 },
-  { to: "/admin/devices", label: "Devices", icon: Smartphone },
-  { to: "/admin/locations", label: "Locations", icon: MapPinned },
-  { to: "/admin/users", label: "Users", icon: ShieldUser },
-];
-
 export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
+  const user = getStoredUser();
+  const navItems = user ? getNavItemsForRole(user.role) : [];
+
   return (
     <>
       {isOpen ? (
@@ -54,7 +34,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[100px] h-[50px] bg-purple-900/40 rounded-full blur-[40px] pointer-events-none"></div>
           <div className="relative z-10">
             <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">Campus System</p>
-            <h2 className="mt-2 text-lg font-semibold text-white">Admin Console</h2>
+            <h2 className="mt-2 text-lg font-semibold text-white">{user ? `${titleCaseRole(user.role)} Portal` : "Campus Portal"}</h2>
           </div>
           <button
             type="button"
