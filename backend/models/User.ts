@@ -1,12 +1,13 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { USER_ROLES, UserRole } from '../utils/roles';
 
 // User interface describing the document
 export interface IUser extends Document {
   name: string;
   studentId: string;
   password: string;
-  role: 'student' | 'staff' | 'admin';
+  role: UserRole;
   department?: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -17,7 +18,7 @@ const UserSchema: Schema<IUser> = new Schema(
     name: { type: String, required: true },
     studentId: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['student', 'staff', 'admin'], default: 'student' },
+    role: { type: String, enum: USER_ROLES, default: 'student' },
     department: { type: String }
   },
   { timestamps: true }

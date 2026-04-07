@@ -2,11 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 import { config } from '../config';
+import { UserRole } from '../utils/roles';
 
 // Type augmentation for request `user` (simple shape)
 export interface JwtPayload {
   id: string;
-  role: 'student' | 'staff' | 'admin';
+  role: UserRole;
   iat?: number;
   exp?: number;
 }
@@ -39,7 +40,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
 };
 
 // Middleware factory for role-based authorization
-export const requireRole = (allowedRoles: Array<'student' | 'staff' | 'admin'>) => {
+export const requireRole = (allowedRoles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user || !allowedRoles.includes(req.user.role)) {
       res.status(403).json({ success: false, message: 'Forbidden' });

@@ -1,10 +1,11 @@
 import { apiRequest } from "./client"
+import type { UserRole } from "../lib/roles"
 
 export interface AppUser {
   _id: string
   name: string
   studentId: string
-  role: "student" | "staff" | "admin"
+  role: UserRole
   department?: string
 }
 
@@ -22,7 +23,7 @@ interface RegisterPayload {
   studentId: string
   password: string
   department?: string
-  role?: "student" | "staff" | "admin"
+  role?: UserRole
 }
 
 export const authApi = {

@@ -5,6 +5,7 @@ import type {
   SelectHTMLAttributes,
   TextareaHTMLAttributes,
 } from "react";
+import type { UserRole } from "../../lib/roles";
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -16,7 +17,7 @@ export interface SessionUser {
   _id: string;
   name: string;
   studentId: string;
-  role: "student" | "staff" | "admin";
+  role: UserRole;
   department?: string;
 }
 
