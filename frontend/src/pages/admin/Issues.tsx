@@ -1,6 +1,19 @@
 import { useEffect, useState } from "react";
-import { Wrench, ChevronDown, RefreshCw } from "lucide-react";
 import { apiRequest } from "../../api/client";
+import {
+  ActionButton,
+  ApiResponse,
+  EmptyState,
+  Field,
+  PageHeader,
+  Panel,
+  Select,
+  StatusBadge,
+  TextInput,
+  formatDate,
+  getErrorMessage,
+  titleCase,
+} from "../../components/admin/adminShared";
 
 interface Issue {
   _id: string;
@@ -11,156 +24,161 @@ interface Issue {
   roomNumber?: number;
   status: string;
   reportedAt: string;
+  assignedTechnician?: { _id: string; name: string } | null;
   remarks?: string;
 }
 
-const statusColors: Record<string, string> = {
-  reported: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  assigned: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  in_progress: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  resolved: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  closed: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
+const nextStatuses: Record<string, string[]> = {
+  reported: [],
+  assigned: ["in_progress"],
+  in_progress: ["resolved"],
+  resolved: ["closed"],
+  closed: [],
 };
-
-const typeIcons: Record<string, string> = {
-  power: "⚡", water: "💧", furniture: "🪑", electrical: "🔌",
-  internet: "🌐", plumbing: "🔧", other: "📋",
-};
-
-const statuses = ["reported", "assigned", "in_progress", "resolved", "closed"];
 
 export function Issues() {
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [technicians, setTechnicians] = useState<Record<string, string>>({});
+  const [dormFilter, setDormFilter] = useState("");
   const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState("");
+  const [error, setError] = useState("");
 
-  const fetchIssues = async () => {
+  const loadIssues = async (endpoint = "/issues") => {
     setLoading(true);
+    setError("");
     try {
-      const res = await apiRequest<{ data: { issues: Issue[] } }>("/issues");
-      setIssues(res.data?.issues || []);
-    } catch {
+      const response = await apiRequest<ApiResponse<{ issues: Issue[] }>>(endpoint);
+      setIssues(response.data.issues);
+    } catch (err) {
       setIssues([]);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchIssues(); }, []);
+  useEffect(() => {
+    void loadIssues();
+  }, []);
 
-  const updateStatus = async (id: string, status: string) => {
-    setUpdatingId(id);
+  const assignTechnician = async (issueId: string) => {
+    const assignedTechnician = technicians[issueId]?.trim();
+    if (!assignedTechnician) return;
+
+    setBusyId(issueId);
     try {
-      await apiRequest(`/issues/${id}/status`, { method: "PATCH", body: { status } });
-      setIssues(prev => prev.map(i => i._id === id ? { ...i, status } : i));
-    } catch (e) {
-      console.error("Failed to update status:", e);
+      await apiRequest(`/issues/${issueId}/assign`, { method: "PATCH", body: { assignedTechnician } });
+      setTechnicians((current) => ({ ...current, [issueId]: "" }));
+      await loadIssues();
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
-      setUpdatingId(null);
+      setBusyId("");
+    }
+  };
+
+  const updateStatus = async (issueId: string, status: string) => {
+    setBusyId(issueId);
+    try {
+      await apiRequest(`/issues/${issueId}/status`, { method: "PATCH", body: { status } });
+      await loadIssues();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setBusyId("");
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <Wrench className="text-purple-400" size={24} />
-            <h1 className="text-2xl font-bold text-white tracking-tight">Maintenance Issues</h1>
-          </div>
-          <p className="text-zinc-500 text-sm">Track and manage campus maintenance reports</p>
-        </div>
-        <button
-          onClick={fetchIssues}
-          className="flex items-center gap-2 bg-[#121216] border border-white/5 rounded-xl px-4 py-2 text-sm text-zinc-300 hover:text-white hover:border-white/10 transition-colors"
-        >
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          Refresh
-        </button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Issues"
+        description="Assign technicians, progress issue states, and filter with the dedicated dorm issue endpoint."
+        actions={
+          <>
+            <TextInput value={dormFilter} onChange={(event) => setDormFilter(event.target.value)} placeholder="Dorm id for dorm filter" />
+            <ActionButton type="button" onClick={() => void loadIssues(dormFilter.trim() ? `/issues/dorm/${dormFilter.trim()}` : "/issues")}>
+              Filter dorm
+            </ActionButton>
+            <ActionButton type="button" variant="primary" onClick={() => void loadIssues()} disabled={loading}>
+              {loading ? "Refreshing..." : "Refresh"}
+            </ActionButton>
+          </>
+        }
+      />
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {statuses.map(s => {
-          const count = issues.filter(i => i.status === s).length;
-          return (
-            <div key={s} className="bg-[#121216] border border-white/5 rounded-xl px-4 py-3">
-              <p className="text-zinc-500 text-xs capitalize mb-1">{s.replace("_", " ")}</p>
-              <p className="text-xl font-bold text-white">{count}</p>
-            </div>
-          );
-        })}
-      </div>
+      {error ? <EmptyState title="Issue actions need attention" description={error} /> : null}
 
-      {/* Table */}
-      <div className="bg-[#121216] border border-white/5 rounded-2xl overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : issues.length === 0 ? (
-          <div className="text-center py-20">
-            <Wrench className="mx-auto text-zinc-600 mb-3" size={40} />
-            <p className="text-zinc-500 text-sm">No maintenance issues found</p>
-          </div>
-        ) : (
+      <Panel title="Issue Queue" description="Technician assignment expects the backend `assignedTechnician` object id.">
+        {issues.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-zinc-500 border-b border-white/5">
+            <table className="w-full min-w-[1120px] text-left text-sm">
+              <thead className="border-b border-white/5 text-zinc-500">
                 <tr>
-                  <th className="font-normal py-3 px-4">Student</th>
-                  <th className="font-normal py-3 px-4">Type</th>
-                  <th className="font-normal py-3 px-4">Location</th>
-                  <th className="font-normal py-3 px-4">Description</th>
-                  <th className="font-normal py-3 px-4">Status</th>
-                  <th className="font-normal py-3 px-4">Reported</th>
+                  <th className="pb-3 font-medium">Student</th>
+                  <th className="pb-3 font-medium">Issue</th>
+                  <th className="pb-3 font-medium">Location</th>
+                  <th className="pb-3 font-medium">Technician</th>
+                  <th className="pb-3 font-medium">Status</th>
+                  <th className="pb-3 font-medium">Reported</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody>
                 {issues.map((issue) => (
-                  <tr key={issue._id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="py-4 px-4 text-white font-medium">{issue.studentId}</td>
-                    <td className="py-4 px-4">
-                      <span className="flex items-center gap-2 text-zinc-300 capitalize">
-                        <span>{typeIcons[issue.issueType] || "📋"}</span>
-                        {issue.issueType}
-                      </span>
+                  <tr key={issue._id} className="border-b border-white/5 align-top">
+                    <td className="py-4 text-zinc-300">{issue.studentId}</td>
+                    <td className="py-4">
+                      <p className="font-medium text-white">{titleCase(issue.issueType)}</p>
+                      <p className="mt-2 max-w-md text-zinc-300">{issue.description}</p>
+                      {issue.remarks ? <p className="mt-2 text-xs text-zinc-500">Remarks: {issue.remarks}</p> : null}
                     </td>
-                    <td className="py-4 px-4 text-zinc-400">
-                      {issue.block ? `Block ${issue.block}` : "—"}
-                      {issue.roomNumber ? `, Room ${issue.roomNumber}` : ""}
+                    <td className="py-4 text-zinc-300">
+                      Block {issue.block ?? "—"}
+                      <br />
+                      <span className="text-xs text-zinc-500">Room {issue.roomNumber ?? "—"}</span>
                     </td>
-                    <td className="py-4 px-4 text-zinc-300 max-w-[200px] truncate">
-                      {issue.description}
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="relative inline-block">
-                        <select
-                          value={issue.status}
-                          onChange={(e) => updateStatus(issue._id, e.target.value)}
-                          disabled={updatingId === issue._id}
-                          className={`appearance-none cursor-pointer text-xs font-medium px-3 py-1.5 pr-7 rounded-lg border ${statusColors[issue.status] || "bg-zinc-800 text-zinc-300"} bg-transparent focus:outline-none focus:ring-1 focus:ring-purple-500/50`}
-                        >
-                          {statuses.map(s => (
-                            <option key={s} value={s} className="bg-[#09090b] text-white">
-                              {s.replace("_", " ")}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-current opacity-60" />
+                    <td className="py-4">
+                      <div className="space-y-2">
+                        <StatusBadge>{issue.assignedTechnician?.name ?? "Unassigned"}</StatusBadge>
+                        <div className="flex gap-2">
+                          <TextInput
+                            value={technicians[issue._id] ?? ""}
+                            onChange={(event) => setTechnicians((current) => ({ ...current, [issue._id]: event.target.value }))}
+                            placeholder="Technician user id"
+                          />
+                          <ActionButton type="button" onClick={() => void assignTechnician(issue._id)} disabled={busyId === issue._id || issue.status !== "reported"}>
+                            Assign
+                          </ActionButton>
+                        </div>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-zinc-500 text-xs">
-                      {new Date(issue.reportedAt).toLocaleDateString()}
+                    <td className="py-4">
+                      <Field label="Status">
+                        <Select
+                          value={issue.status}
+                          disabled={busyId === issue._id || !nextStatuses[issue.status]?.length}
+                          onChange={(event) => void updateStatus(issue._id, event.target.value)}
+                        >
+                          <option value={issue.status}>{titleCase(issue.status)}</option>
+                          {nextStatuses[issue.status]?.map((status) => (
+                            <option key={status} value={status}>
+                              {titleCase(status)}
+                            </option>
+                          ))}
+                        </Select>
+                      </Field>
                     </td>
+                    <td className="py-4 text-zinc-400">{formatDate(issue.reportedAt)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        ) : (
+          <EmptyState title="No issues found" description="Issue records will appear here when students report them." />
         )}
-      </div>
+      </Panel>
     </div>
   );
 }

@@ -200,3 +200,16 @@ export const profile = async (req: Request, res: Response): Promise<void> => {
     sendError(res, 'Could not fetch profile');
   }
 };
+
+// GET /api/auth/users
+// Staff/admin can fetch users for assignment and admin tasks
+export const listUsers = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    sendSuccess(res, 'Users fetched', { users });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('List users error:', error);
+    sendError(res, 'Could not fetch users');
+  }
+};

@@ -1,253 +1,183 @@
 import { useEffect, useState } from "react";
-import { CreditCard, Check, X, RefreshCw, Shield, Coffee, BookOpen, GraduationCap, UserCheck } from "lucide-react";
 import { apiRequest } from "../../api/client";
-
-interface LostIdStamps {
-  security: boolean;
-  cafeteria: boolean;
-  library: boolean;
-  department: boolean;
-  proctor: boolean;
-}
+import {
+  ActionButton,
+  ApiResponse,
+  EmptyState,
+  PageHeader,
+  Panel,
+  StatusBadge,
+  TextInput,
+  formatDate,
+  getErrorMessage,
+  titleCase,
+} from "../../components/admin/adminShared";
 
 interface LostIdRequest {
   _id: string;
   studentId: string;
   status: string;
-  stamps: LostIdStamps;
-  paymentStatus: boolean;
+  stamps: Record<string, boolean>;
   temporaryIdIssued: boolean;
-  requestDate: string;
   remarks?: string;
+  requestDate: string;
 }
 
-const statusColors: Record<string, string> = {
-  pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  approved: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  rejected: "bg-red-500/10 text-red-400 border-red-500/20",
-  completed: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-};
-
-const stampDepts = [
-  { key: "security", label: "Security", icon: Shield },
-  { key: "cafeteria", label: "Cafeteria", icon: Coffee },
-  { key: "library", label: "Library", icon: BookOpen },
-  { key: "department", label: "Dept", icon: GraduationCap },
-  { key: "proctor", label: "Proctor", icon: UserCheck },
-] as const;
+const stampKeys = ["security", "cafeteria", "library", "department", "proctor"];
 
 export function LostIdRequests() {
   const [requests, setRequests] = useState<LostIdRequest[]>([]);
+  const [remarks, setRemarks] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [busyKey, setBusyKey] = useState("");
+  const [error, setError] = useState("");
 
-  const fetchRequests = async () => {
+  const loadRequests = async () => {
     setLoading(true);
+    setError("");
     try {
-      const res = await apiRequest<{ data: { requests: LostIdRequest[] } }>("/lost-id");
-      setRequests(res.data?.requests || []);
-    } catch {
+      const response = await apiRequest<ApiResponse<{ requests: LostIdRequest[] }>>("/lost-id");
+      setRequests(response.data.requests);
+    } catch (err) {
       setRequests([]);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchRequests(); }, []);
+  useEffect(() => {
+    void loadRequests();
+  }, []);
 
-  const updateStamp = async (id: string, stamp: string, value: boolean) => {
-    setUpdatingId(`${id}-${stamp}`);
+  const toggleStamp = async (requestId: string, stamp: string, value: boolean) => {
+    setBusyKey(`${requestId}-${stamp}`);
     try {
-      await apiRequest(`/lost-id/${id}/stamp`, { method: "PATCH", body: { stamp, value } });
-      setRequests(prev => prev.map(r =>
-        r._id === id ? { ...r, stamps: { ...r.stamps, [stamp]: value } } : r
-      ));
-    } catch (e) {
-      console.error("Failed to update stamp:", e);
+      await apiRequest(`/lost-id/${requestId}/stamp`, { method: "PATCH", body: { stamp, value } });
+      await loadRequests();
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
-      setUpdatingId(null);
+      setBusyKey("");
     }
   };
 
-  const approveRequest = async (id: string) => {
-    setUpdatingId(id);
+  const approve = async (requestId: string) => {
+    setBusyKey(requestId);
     try {
-      await apiRequest(`/lost-id/${id}/approve`, { method: "PATCH" });
-      setRequests(prev => prev.map(r => r._id === id ? { ...r, status: "approved" } : r));
-    } catch (e) {
-      console.error("Failed to approve:", e);
+      await apiRequest(`/lost-id/${requestId}/approve`, { method: "PATCH" });
+      await loadRequests();
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
-      setUpdatingId(null);
+      setBusyKey("");
     }
   };
 
-  const rejectRequest = async (id: string) => {
-    const remarks = prompt("Enter rejection reason:");
-    if (!remarks) return;
-    setUpdatingId(id);
+  const reject = async (requestId: string) => {
+    const reason = remarks[requestId]?.trim();
+    if (!reason) {
+      setError("Rejection remarks are required.");
+      return;
+    }
+
+    setBusyKey(requestId);
     try {
-      await apiRequest(`/lost-id/${id}/reject`, { method: "PATCH", body: { remarks } });
-      setRequests(prev => prev.map(r => r._id === id ? { ...r, status: "rejected", remarks } : r));
-    } catch (e) {
-      console.error("Failed to reject:", e);
+      await apiRequest(`/lost-id/${requestId}/reject`, { method: "PATCH", body: { remarks: reason } });
+      setRemarks((current) => ({ ...current, [requestId]: "" }));
+      await loadRequests();
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
-      setUpdatingId(null);
+      setBusyKey("");
     }
   };
 
-  const issueTemporaryId = async (id: string) => {
-    setUpdatingId(id);
+  const issueTemporaryId = async (requestId: string) => {
+    setBusyKey(`temp-${requestId}`);
     try {
-      await apiRequest(`/lost-id/${id}/temporary-id`, { method: "PATCH" });
-      setRequests(prev => prev.map(r => r._id === id ? { ...r, temporaryIdIssued: true } : r));
-    } catch (e) {
-      console.error("Failed to issue temp ID:", e);
+      await apiRequest(`/lost-id/${requestId}/temporary-id`, { method: "PATCH" });
+      await loadRequests();
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
-      setUpdatingId(null);
+      setBusyKey("");
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <CreditCard className="text-purple-400" size={24} />
-            <h1 className="text-2xl font-bold text-white tracking-tight">Lost ID Requests</h1>
-          </div>
-          <p className="text-zinc-500 text-sm">Process lost student ID replacement requests</p>
-        </div>
-        <button
-          onClick={fetchRequests}
-          className="flex items-center gap-2 bg-[#121216] border border-white/5 rounded-xl px-4 py-2 text-sm text-zinc-300 hover:text-white hover:border-white/10 transition-colors"
-        >
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          Refresh
-        </button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Lost ID Requests"
+        description="Manage stamp completion, approval, rejection remarks, and temporary ID issuance."
+        actions={
+          <ActionButton type="button" variant="primary" onClick={loadRequests} disabled={loading}>
+            {loading ? "Refreshing..." : "Refresh"}
+          </ActionButton>
+        }
+      />
 
-      {/* Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {["pending", "approved", "rejected", "completed"].map(status => {
-          const count = requests.filter(r => r.status === status).length;
-          return (
-            <div key={status} className="bg-[#121216] border border-white/5 rounded-xl px-4 py-3">
-              <p className="text-zinc-500 text-xs capitalize mb-1">{status}</p>
-              <p className="text-xl font-bold text-white">{count}</p>
-            </div>
-          );
-        })}
-      </div>
+      {error ? <EmptyState title="Lost ID actions need attention" description={error} /> : null}
 
-      {/* Table */}
-      <div className="bg-[#121216] border border-white/5 rounded-2xl overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : requests.length === 0 ? (
-          <div className="text-center py-20">
-            <CreditCard className="mx-auto text-zinc-600 mb-3" size={40} />
-            <p className="text-zinc-500 text-sm">No lost ID requests found</p>
+      <Panel title="Request Queue" description="Approval only succeeds after every stamp has been completed.">
+        {requests.length ? (
+          <div className="space-y-4">
+            {requests.map((request) => (
+              <div key={request._id} className="rounded-2xl border border-white/5 bg-[#141415] p-4">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <p className="text-base font-medium text-white">{request.studentId}</p>
+                      <StatusBadge>{titleCase(request.status)}</StatusBadge>
+                      <StatusBadge tone={request.temporaryIdIssued ? "success" : "neutral"}>
+                        {request.temporaryIdIssued ? "Temporary ID issued" : "Temporary ID pending"}
+                      </StatusBadge>
+                    </div>
+                    <p className="text-sm text-zinc-400">Requested {formatDate(request.requestDate)}</p>
+                    {request.remarks ? <p className="text-sm text-zinc-400">Remarks: {request.remarks}</p> : null}
+                    <div className="flex flex-wrap gap-2">
+                      {stampKeys.map((stamp) => (
+                        <ActionButton
+                          key={stamp}
+                          type="button"
+                          variant={request.stamps[stamp] ? "primary" : "secondary"}
+                          disabled={busyKey === `${request._id}-${stamp}`}
+                          onClick={() => void toggleStamp(request._id, stamp, !request.stamps[stamp])}
+                        >
+                          {titleCase(stamp)}
+                        </ActionButton>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="w-full max-w-xl space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                      <ActionButton type="button" onClick={() => void approve(request._id)} disabled={busyKey === request._id}>
+                        Approve
+                      </ActionButton>
+                      <ActionButton type="button" onClick={() => void issueTemporaryId(request._id)} disabled={busyKey === `temp-${request._id}` || request.temporaryIdIssued}>
+                        Issue temporary ID
+                      </ActionButton>
+                    </div>
+                    <div className="flex gap-2">
+                      <TextInput
+                        value={remarks[request._id] ?? ""}
+                        onChange={(event) => setRemarks((current) => ({ ...current, [request._id]: event.target.value }))}
+                        placeholder="Rejection remarks"
+                      />
+                      <ActionButton type="button" variant="danger" onClick={() => void reject(request._id)} disabled={busyKey === request._id}>
+                        Reject
+                      </ActionButton>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-zinc-500 border-b border-white/5">
-                <tr>
-                  <th className="font-normal py-3 px-4">Student</th>
-                  <th className="font-normal py-3 px-4">Status</th>
-                  {stampDepts.map(d => (
-                    <th key={d.key} className="font-normal py-3 px-3 text-center">{d.label}</th>
-                  ))}
-                  <th className="font-normal py-3 px-4 text-center">Temp ID</th>
-                  <th className="font-normal py-3 px-4">Date</th>
-                  <th className="font-normal py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {requests.map((r) => (
-                  <tr key={r._id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="py-4 px-4 text-white font-medium">{r.studentId}</td>
-                    <td className="py-4 px-4">
-                      <span className={`text-xs font-medium px-3 py-1.5 rounded-lg border capitalize ${statusColors[r.status] || ""}`}>
-                        {r.status}
-                      </span>
-                    </td>
-                    {stampDepts.map(d => {
-                      const stamped = r.stamps[d.key as keyof LostIdStamps];
-                      const isUpdating = updatingId === `${r._id}-${d.key}`;
-                      return (
-                        <td key={d.key} className="py-4 px-3 text-center">
-                          <button
-                            onClick={() => updateStamp(r._id, d.key, !stamped)}
-                            disabled={isUpdating}
-                            className={`inline-flex items-center justify-center w-8 h-8 rounded-full transition-colors disabled:opacity-50 ${
-                              stamped
-                                ? "bg-emerald-500/10 text-emerald-400"
-                                : "bg-zinc-800 text-zinc-500 hover:bg-purple-500/20 hover:text-purple-400"
-                            }`}
-                            title={`${stamped ? "Remove" : "Add"} ${d.label} stamp`}
-                          >
-                            {isUpdating ? (
-                              <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                            ) : stamped ? (
-                              <Check size={14} />
-                            ) : (
-                              <d.icon size={14} />
-                            )}
-                          </button>
-                        </td>
-                      );
-                    })}
-                    <td className="py-4 px-4 text-center">
-                      {r.temporaryIdIssued ? (
-                        <span className="text-emerald-400 text-xs font-medium">Issued</span>
-                      ) : (
-                        <button
-                          onClick={() => issueTemporaryId(r._id)}
-                          disabled={updatingId === r._id}
-                          className="text-xs text-zinc-400 hover:text-purple-400 underline underline-offset-2 disabled:opacity-50"
-                        >
-                          Issue
-                        </button>
-                      )}
-                    </td>
-                    <td className="py-4 px-4 text-zinc-500 text-xs">
-                      {new Date(r.requestDate).toLocaleDateString()}
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-1 justify-end">
-                        {r.status === "pending" && (
-                          <>
-                            <button
-                              onClick={() => approveRequest(r._id)}
-                              disabled={updatingId === r._id}
-                              className="p-2 text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors disabled:opacity-50"
-                              title="Approve"
-                            >
-                              <Check size={14} />
-                            </button>
-                            <button
-                              onClick={() => rejectRequest(r._id)}
-                              disabled={updatingId === r._id}
-                              className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
-                              title="Reject"
-                            >
-                              <X size={14} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <EmptyState title="No lost ID requests found" description="Lost ID requests will appear here when students submit them." />
         )}
-      </div>
+      </Panel>
     </div>
   );
 }

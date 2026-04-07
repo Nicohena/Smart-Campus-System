@@ -34,7 +34,7 @@ describe('Device Registration Module', () => {
   it('should allow student to view registered devices', async () => {
     const { user: student } = await createAndLogin(app, 'student');
     const { token: staffToken } = await createAndLogin(app, 'staff');
-    const studentToken = await loginUser(app, student.email, 'Password123!');
+    const studentToken = await loginUser(app, student.studentId, 'Password123!');
 
     await request(app)
       .post('/api/devices/register')

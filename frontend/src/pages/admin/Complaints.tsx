@@ -1,6 +1,19 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, ChevronDown, RefreshCw } from "lucide-react";
 import { apiRequest } from "../../api/client";
+import {
+  ActionButton,
+  ApiResponse,
+  EmptyState,
+  Field,
+  PageHeader,
+  Panel,
+  Select,
+  StatusBadge,
+  TextInput,
+  formatDate,
+  getErrorMessage,
+  titleCase,
+} from "../../components/admin/adminShared";
 
 interface Complaint {
   _id: string;
@@ -11,176 +24,177 @@ interface Complaint {
   status: string;
   priority: string;
   submittedAt: string;
+  handledBy?: { _id: string; name: string } | null;
   remarks?: string;
 }
 
-const statusColors: Record<string, string> = {
-  submitted: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  under_review: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  in_progress: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  resolved: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  rejected: "bg-red-500/10 text-red-400 border-red-500/20",
+const nextStatuses: Record<string, string[]> = {
+  submitted: ["under_review", "rejected"],
+  under_review: ["in_progress"],
+  in_progress: ["resolved"],
+  resolved: [],
+  rejected: [],
 };
-
-const priorityColors: Record<string, string> = {
-  low: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-  medium: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  high: "bg-red-500/10 text-red-400 border-red-500/20",
-};
-
-const statuses = ["submitted", "under_review", "in_progress", "resolved", "rejected"];
-const priorities = ["low", "medium", "high"];
 
 export function Complaints() {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState("");
+  const [error, setError] = useState("");
 
-  const fetchComplaints = async () => {
+  const loadComplaints = async () => {
     setLoading(true);
+    setError("");
     try {
-      const res = await apiRequest<{ data: { complaints: Complaint[] } }>("/complaints");
-      setComplaints(res.data?.complaints || []);
-    } catch {
+      const response = await apiRequest<ApiResponse<{ complaints: Complaint[] }>>("/complaints");
+      setComplaints(response.data.complaints);
+    } catch (err) {
       setComplaints([]);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchComplaints(); }, []);
+  useEffect(() => {
+    void loadComplaints();
+  }, []);
 
-  const updateStatus = async (id: string, status: string) => {
-    setUpdatingId(id);
+  const updateStatus = async (complaintId: string, status: string) => {
+    setBusyId(complaintId);
     try {
-      await apiRequest(`/complaints/${id}/status`, { method: "PATCH", body: { status } });
-      setComplaints(prev => prev.map(c => c._id === id ? { ...c, status } : c));
-    } catch (e) {
-      console.error("Failed to update status:", e);
+      await apiRequest(`/complaints/${complaintId}/status`, { method: "PATCH", body: { status } });
+      await loadComplaints();
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
-      setUpdatingId(null);
+      setBusyId("");
     }
   };
 
-  const updatePriority = async (id: string, priority: string) => {
-    setUpdatingId(id);
+  const updatePriority = async (complaintId: string, priority: string) => {
+    setBusyId(complaintId);
     try {
-      await apiRequest(`/complaints/${id}/priority`, { method: "PATCH", body: { priority } });
-      setComplaints(prev => prev.map(c => c._id === id ? { ...c, priority } : c));
-    } catch (e) {
-      console.error("Failed to update priority:", e);
+      await apiRequest(`/complaints/${complaintId}/priority`, { method: "PATCH", body: { priority } });
+      await loadComplaints();
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
-      setUpdatingId(null);
+      setBusyId("");
+    }
+  };
+
+  const assignHandler = async (complaintId: string) => {
+    const handledBy = assignments[complaintId]?.trim();
+    if (!handledBy) return;
+
+    setBusyId(complaintId);
+    try {
+      await apiRequest(`/complaints/${complaintId}/assign`, { method: "PATCH", body: { handledBy } });
+      setAssignments((current) => ({ ...current, [complaintId]: "" }));
+      await loadComplaints();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setBusyId("");
     }
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <AlertTriangle className="text-purple-400" size={24} />
-            <h1 className="text-2xl font-bold text-white tracking-tight">Complaints</h1>
-          </div>
-          <p className="text-zinc-500 text-sm">Manage and review student complaints</p>
-        </div>
-        <button
-          onClick={fetchComplaints}
-          className="flex items-center gap-2 bg-[#121216] border border-white/5 rounded-xl px-4 py-2 text-sm text-zinc-300 hover:text-white hover:border-white/10 transition-colors"
-        >
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          Refresh
-        </button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Complaints"
+        description="Track complaint status, set priority, and assign handlers using the server complaint workflow."
+        actions={
+          <ActionButton type="button" variant="primary" onClick={loadComplaints} disabled={loading}>
+            {loading ? "Refreshing..." : "Refresh"}
+          </ActionButton>
+        }
+      />
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {statuses.map(s => {
-          const count = complaints.filter(c => c.status === s).length;
-          return (
-            <div key={s} className="bg-[#121216] border border-white/5 rounded-xl px-4 py-3">
-              <p className="text-zinc-500 text-xs capitalize mb-1">{s.replace("_", " ")}</p>
-              <p className="text-xl font-bold text-white">{count}</p>
-            </div>
-          );
-        })}
-      </div>
+      {error ? <EmptyState title="Complaint actions need attention" description={error} /> : null}
 
-      {/* Table */}
-      <div className="bg-[#121216] border border-white/5 rounded-2xl overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : complaints.length === 0 ? (
-          <div className="text-center py-20">
-            <AlertTriangle className="mx-auto text-zinc-600 mb-3" size={40} />
-            <p className="text-zinc-500 text-sm">No complaints found</p>
-          </div>
-        ) : (
+      <Panel title="Complaint Queue" description="Handler assignment expects the MongoDB user id accepted by the backend `handledBy` field.">
+        {complaints.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-zinc-500 border-b border-white/5">
+            <table className="w-full min-w-[1120px] text-left text-sm">
+              <thead className="border-b border-white/5 text-zinc-500">
                 <tr>
-                  <th className="font-normal py-3 px-4">Student</th>
-                  <th className="font-normal py-3 px-4">Category</th>
-                  <th className="font-normal py-3 px-4">Title</th>
-                  <th className="font-normal py-3 px-4">Status</th>
-                  <th className="font-normal py-3 px-4">Priority</th>
-                  <th className="font-normal py-3 px-4">Date</th>
+                  <th className="pb-3 font-medium">Student</th>
+                  <th className="pb-3 font-medium">Complaint</th>
+                  <th className="pb-3 font-medium">Status</th>
+                  <th className="pb-3 font-medium">Priority</th>
+                  <th className="pb-3 font-medium">Handler</th>
+                  <th className="pb-3 font-medium">Submitted</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
-                {complaints.map((c) => (
-                  <tr key={c._id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="py-4 px-4 text-white font-medium">{c.studentId}</td>
-                    <td className="py-4 px-4">
-                      <span className="text-zinc-300 capitalize">{c.category}</span>
+              <tbody>
+                {complaints.map((complaint) => (
+                  <tr key={complaint._id} className="border-b border-white/5 align-top">
+                    <td className="py-4 text-zinc-300">{complaint.studentId}</td>
+                    <td className="py-4">
+                      <p className="font-medium text-white">{complaint.title}</p>
+                      <p className="mt-1 text-xs text-zinc-500">{titleCase(complaint.category)}</p>
+                      <p className="mt-2 max-w-md text-zinc-300">{complaint.description}</p>
+                      {complaint.remarks ? <p className="mt-2 text-xs text-zinc-500">Remarks: {complaint.remarks}</p> : null}
                     </td>
-                    <td className="py-4 px-4 text-zinc-300 max-w-[200px] truncate">{c.title}</td>
-                    <td className="py-4 px-4">
-                      <div className="relative inline-block">
-                        <select
-                          value={c.status}
-                          onChange={(e) => updateStatus(c._id, e.target.value)}
-                          disabled={updatingId === c._id}
-                          className={`appearance-none cursor-pointer text-xs font-medium px-3 py-1.5 pr-7 rounded-lg border ${statusColors[c.status] || "bg-zinc-800 text-zinc-300"} bg-transparent focus:outline-none focus:ring-1 focus:ring-purple-500/50`}
+                    <td className="py-4">
+                      <Field label="Status">
+                        <Select
+                          value={complaint.status}
+                          disabled={busyId === complaint._id || !nextStatuses[complaint.status]?.length}
+                          onChange={(event) => void updateStatus(complaint._id, event.target.value)}
                         >
-                          {statuses.map(s => (
-                            <option key={s} value={s} className="bg-[#09090b] text-white">
-                              {s.replace("_", " ")}
+                          <option value={complaint.status}>{titleCase(complaint.status)}</option>
+                          {nextStatuses[complaint.status]?.map((status) => (
+                            <option key={status} value={status}>
+                              {titleCase(status)}
                             </option>
                           ))}
-                        </select>
-                        <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-current opacity-60" />
-                      </div>
+                        </Select>
+                      </Field>
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="relative inline-block">
-                        <select
-                          value={c.priority}
-                          onChange={(e) => updatePriority(c._id, e.target.value)}
-                          disabled={updatingId === c._id}
-                          className={`appearance-none cursor-pointer text-xs font-medium px-3 py-1.5 pr-7 rounded-lg border ${priorityColors[c.priority] || "bg-zinc-800 text-zinc-300"} bg-transparent focus:outline-none focus:ring-1 focus:ring-purple-500/50`}
+                    <td className="py-4">
+                      <Field label="Priority">
+                        <Select
+                          value={complaint.priority}
+                          disabled={busyId === complaint._id || complaint.status === "resolved" || complaint.status === "rejected"}
+                          onChange={(event) => void updatePriority(complaint._id, event.target.value)}
                         >
-                          {priorities.map(p => (
-                            <option key={p} value={p} className="bg-[#09090b] text-white">{p}</option>
+                          {["low", "medium", "high"].map((priority) => (
+                            <option key={priority} value={priority}>
+                              {titleCase(priority)}
+                            </option>
                           ))}
-                        </select>
-                        <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-current opacity-60" />
+                        </Select>
+                      </Field>
+                    </td>
+                    <td className="py-4">
+                      <div className="space-y-2">
+                        <StatusBadge>{complaint.handledBy?.name ?? "Unassigned"}</StatusBadge>
+                        <div className="flex gap-2">
+                          <TextInput
+                            value={assignments[complaint._id] ?? ""}
+                            onChange={(event) => setAssignments((current) => ({ ...current, [complaint._id]: event.target.value }))}
+                            placeholder="Handler user id"
+                          />
+                          <ActionButton type="button" onClick={() => void assignHandler(complaint._id)} disabled={busyId === complaint._id}>
+                            Assign
+                          </ActionButton>
+                        </div>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-zinc-500 text-xs">
-                      {new Date(c.submittedAt).toLocaleDateString()}
-                    </td>
+                    <td className="py-4 text-zinc-400">{formatDate(complaint.submittedAt)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        ) : (
+          <EmptyState title="No complaints found" description="Complaint records will appear here when students submit them." />
         )}
-      </div>
+      </Panel>
     </div>
   );
 }

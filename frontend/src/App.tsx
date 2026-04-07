@@ -8,6 +8,9 @@ import { Clearances } from "./pages/admin/Clearances";
 import { Notices } from "./pages/admin/Notices";
 import { LostIdRequests } from "./pages/admin/LostIdRequests";
 import { DormManagement } from "./pages/admin/DormManagement";
+import { Devices } from "./pages/admin/Devices";
+import { Locations } from "./pages/admin/Locations";
+import { Users } from "./pages/admin/Users";
 
 import { Hero } from "./components/landing/Hero";
 import { Features } from "./components/landing/Features";
@@ -73,6 +76,9 @@ function App() {
         <Route path="notices" element={<Notices />} />
         <Route path="lost-id" element={<LostIdRequests />} />
         <Route path="dorms" element={<DormManagement />} />
+        <Route path="devices" element={<Devices />} />
+        <Route path="locations" element={<Locations />} />
+        <Route path="users" element={<Users />} />
       </Route>
     </Routes>
   );

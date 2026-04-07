@@ -1,4 +1,27 @@
-const API_BASE = "http://localhost:5000/api"
+export const API_BASE = "http://localhost:5000/api"
+
+export interface ApiResponse<T> {
+  success: boolean
+  message: string
+  data: T
+}
+
+interface ApiErrorDetail {
+  msg?: string
+  path?: string
+}
+
+export class ApiRequestError extends Error {
+  status: number
+  details?: ApiErrorDetail[]
+
+  constructor(message: string, status: number, details?: ApiErrorDetail[]) {
+    super(message)
+    this.name = "ApiRequestError"
+    this.status = status
+    this.details = details
+  }
+}
 
 interface RequestOptions {
   method?: string
@@ -29,11 +52,27 @@ export async function apiRequest<T>(endpoint: string, options: RequestOptions = 
   }
 
   const res = await fetch(`${API_BASE}${endpoint}`, config)
-  const data = await res.json()
+  const raw = await res.text()
+  const data = raw ? JSON.parse(raw) : null
 
   if (!res.ok) {
-    throw new Error(data.message || "Request failed")
+    const details = Array.isArray(data?.data) ? (data.data as ApiErrorDetail[]) : undefined
+    const detailMessage = details?.length
+      ? details
+          .map((detail) => {
+            if (detail.path && detail.msg) return `${detail.path}: ${detail.msg}`
+            return detail.msg || detail.path || ""
+          })
+          .filter(Boolean)
+          .join(", ")
+      : ""
+
+    throw new ApiRequestError(
+      detailMessage ? `${data?.message || "Request failed"} (${detailMessage})` : data?.message || "Request failed",
+      res.status,
+      details,
+    )
   }
 
-  return data
+  return data as T
 }

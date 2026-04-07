@@ -174,12 +174,15 @@ export const setNoticeStatus = async (req: Request, res: Response): Promise<void
 // Students view active notices
 export const getAllNotices = async (req: Request, res: Response): Promise<void> => {
   try {
+    const isPrivileged = req.user?.role === 'staff' || req.user?.role === 'admin';
     const now = new Date();
-    const notices = await Notice.find({
-      status: 'active',
-      $or: [{ expiryDate: { $exists: false } }, { expiryDate: null }, { expiryDate: { $gt: now } }],
-      targetAudience: 'all_students'
-    }).sort({ createdAt: -1 });
+    const notices = isPrivileged
+      ? await Notice.find().sort({ createdAt: -1 })
+      : await Notice.find({
+          status: 'active',
+          $or: [{ expiryDate: { $exists: false } }, { expiryDate: null }, { expiryDate: { $gt: now } }],
+          targetAudience: 'all_students'
+        }).sort({ createdAt: -1 });
     sendSuccess(res, 'Notices fetched', { notices });
   } catch (error) {
     // eslint-disable-next-line no-console

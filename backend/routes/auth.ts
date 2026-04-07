@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { body } from 'express-validator';
-import { login, register, profile, refreshToken, logout } from '../controllers/authController';
+import { login, register, profile, refreshToken, logout, listUsers } from '../controllers/authController';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { validationResultHandler } from './validationHelpers';
 
@@ -40,6 +40,7 @@ router.post(
 
 // Profile for logged-in user
 router.get('/profile', authMiddleware, profile);
+router.get('/users', authMiddleware, requireRole(['staff', 'admin']), listUsers);
 
 // Refresh token endpoint
 router.post('/refresh', [body('refreshToken').optional().isString().trim()], validationResultHandler, refreshToken);

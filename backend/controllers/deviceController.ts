@@ -199,17 +199,19 @@ export const getDeviceById = async (req: Request, res: Response): Promise<void> 
 export const deleteDeviceById = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
+    const role = req.user?.role;
     const { id } = req.params;
     if (!userId) {
       sendError(res, 'Unauthorized', 401);
       return;
     }
-
     if (!isValidId(id)) {
       sendError(res, 'Invalid device ID', 400);
       return;
     }
-    const device = await Device.findOneAndDelete({ _id: id, student: userId });
+
+    const filter = role === 'staff' || role === 'admin' ? { _id: id } : { _id: id, student: userId };
+    const device = await Device.findOneAndDelete(filter);
     if (!device) {
       sendError(res, 'Device not found', 404);
       return;
@@ -219,4 +221,6 @@ export const deleteDeviceById = async (req: Request, res: Response): Promise<voi
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Delete device by id error:', error);
-    sendError(res, 'Could not delete device');}}
+    sendError(res, 'Could not delete device');
+  }
+};
