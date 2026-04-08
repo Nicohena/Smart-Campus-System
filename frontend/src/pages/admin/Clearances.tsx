@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../api/client";
 import {
   ActionButton,
@@ -64,6 +65,7 @@ export function Clearances() {
     setBusyKey(`${recordId}-${section}`);
     try {
       await apiRequest(`/clearance/${recordId}/${section}`, { method: "PATCH" });
+      toast.success(`${titleCase(section)} approved`);
       await loadRecords();
     } catch (err) {
       setError(getErrorMessage(err));

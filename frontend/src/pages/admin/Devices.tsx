@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../api/client";
 import {
   ActionButton,
@@ -77,6 +78,7 @@ export function Devices() {
         method: "POST",
         body: { ...form, ssid: form.ssid || undefined },
       });
+      toast.success("Device registered");
       setForm(emptyForm);
       await loadDevices();
     } catch (err) {
@@ -92,6 +94,7 @@ export function Devices() {
         method: "PATCH",
         body: { remarks: blockRemarks[deviceId] || undefined },
       });
+      toast.success("Device blocked");
       await loadDevices();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -101,6 +104,7 @@ export function Devices() {
   const deleteDevice = async (deviceId: string) => {
     try {
       await apiRequest(`/devices/${deviceId}`, { method: "DELETE" });
+      toast.success("Device deleted");
       await loadDevices();
     } catch (err) {
       setError(getErrorMessage(err));

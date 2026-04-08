@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../api/client";
 import {
   ActionButton,
@@ -86,8 +87,10 @@ export function Notices() {
     try {
       if (editingId) {
         await apiRequest(`/notices/${editingId}`, { method: "PATCH", body });
+        toast.success("Notice updated");
       } else {
         await apiRequest("/notices", { method: "POST", body });
+        toast.success("Notice created");
       }
       resetForm();
       await loadNotices();
@@ -116,6 +119,7 @@ export function Notices() {
     try {
       const status = notice.status === "active" ? "expired" : "active";
       await apiRequest(`/notices/${notice._id}/status`, { method: "PATCH", body: { status } });
+      toast.success(`Notice ${status === "active" ? "activated" : "expired"}`);
       await loadNotices();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -125,6 +129,7 @@ export function Notices() {
   const deleteNotice = async (id: string) => {
     try {
       await apiRequest(`/notices/${id}`, { method: "DELETE" });
+      toast.success("Notice deleted");
       if (editingId === id) resetForm();
       await loadNotices();
     } catch (err) {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../api/client";
 import {
   ActionButton,
@@ -69,6 +70,7 @@ export function Issues() {
     setBusyId(issueId);
     try {
       await apiRequest(`/issues/${issueId}/assign`, { method: "PATCH", body: { assignedTechnician } });
+      toast.success("Technician assigned");
       setTechnicians((current) => ({ ...current, [issueId]: "" }));
       await loadIssues();
     } catch (err) {
@@ -82,6 +84,7 @@ export function Issues() {
     setBusyId(issueId);
     try {
       await apiRequest(`/issues/${issueId}/status`, { method: "PATCH", body: { status } });
+      toast.success("Issue status updated");
       await loadIssues();
     } catch (err) {
       setError(getErrorMessage(err));

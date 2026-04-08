@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../api/client";
 import {
   ActionButton,
@@ -54,6 +55,7 @@ export function LostIdRequests() {
     setBusyKey(`${requestId}-${stamp}`);
     try {
       await apiRequest(`/lost-id/${requestId}/stamp`, { method: "PATCH", body: { stamp, value } });
+      toast.success(`${titleCase(stamp)} stamp ${value ? "applied" : "removed"}`);
       await loadRequests();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -66,6 +68,7 @@ export function LostIdRequests() {
     setBusyKey(requestId);
     try {
       await apiRequest(`/lost-id/${requestId}/approve`, { method: "PATCH" });
+      toast.success("Request approved");
       await loadRequests();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -78,12 +81,14 @@ export function LostIdRequests() {
     const reason = remarks[requestId]?.trim();
     if (!reason) {
       setError("Rejection remarks are required.");
+      toast.error("Rejection remarks are required.");
       return;
     }
 
     setBusyKey(requestId);
     try {
       await apiRequest(`/lost-id/${requestId}/reject`, { method: "PATCH", body: { remarks: reason } });
+      toast.success("Request rejected");
       setRemarks((current) => ({ ...current, [requestId]: "" }));
       await loadRequests();
     } catch (err) {
@@ -97,6 +102,7 @@ export function LostIdRequests() {
     setBusyKey(`temp-${requestId}`);
     try {
       await apiRequest(`/lost-id/${requestId}/temporary-id`, { method: "PATCH" });
+      toast.success("Temporary ID issued");
       await loadRequests();
     } catch (err) {
       setError(getErrorMessage(err));

@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../api/client";
 import {
   ActionButton,
@@ -89,8 +90,10 @@ export function Locations() {
     try {
       if (editingId) {
         await apiRequest(`/navigation/${editingId}`, { method: "PATCH", body });
+        toast.success("Location updated");
       } else {
         await apiRequest("/navigation", { method: "POST", body });
+        toast.success("Location created");
       }
       resetForm();
       await loadLocations();
@@ -119,6 +122,7 @@ export function Locations() {
   const deleteLocation = async (id: string) => {
     try {
       await apiRequest(`/navigation/${id}`, { method: "DELETE" });
+      toast.success("Location deleted");
       if (editingId === id) resetForm();
       await loadLocations();
     } catch (err) {

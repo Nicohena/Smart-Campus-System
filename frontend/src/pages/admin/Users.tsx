@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { authApi } from "../../api/auth";
 import { apiRequest } from "../../api/client";
 import {
@@ -38,18 +39,14 @@ export function Users() {
   const [form, setForm] = useState(() => getEmptyForm(sessionUser?.role));
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   const loadProfile = async () => {
     setLoading(true);
-    setError("");
     try {
       const response = (await authApi.getProfile()) as ApiResponse<{ user: ProfileUser }>;
       setProfile(response.data.user);
-    } catch (err) {
+    } catch {
       setProfile(null);
-      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -62,12 +59,10 @@ export function Users() {
   const registerUser = async (event: FormEvent) => {
     event.preventDefault();
     setSubmitting(true);
-    setError("");
-    setMessage("");
 
     if (form.password.length < 8) {
       setSubmitting(false);
-      setError("Password must be at least 8 characters.");
+      toast.error("Password must be at least 8 characters.");
       return;
     }
 
@@ -80,10 +75,10 @@ export function Users() {
         ...(sessionUser?.role === "admin" ? { role: form.role } : {}),
       };
       const response = await apiRequest<ApiResponse<{ user: ProfileUser }>>("/auth/register", { method: "POST", body });
-      setMessage(`Created ${response.data.user.name} (${response.data.user.role}).`);
+      toast.success(`Created ${response.data.user.name} (${response.data.user.role}).`);
       setForm(getEmptyForm(sessionUser?.role));
     } catch (err) {
-      setError(getErrorMessage(err));
+      toast.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -112,9 +107,6 @@ export function Users() {
           </ActionButton>
         }
       />
-
-      {message ? <EmptyState title="User created" description={message} /> : null}
-      {error ? <EmptyState title="User actions need attention" description={error} /> : null}
 
       <div className="grid gap-6 xl:grid-cols-[0.82fr_1.18fr]">
         <Panel title="Current Session" description="This card reflects `/api/auth/profile` and the locally stored session role.">

@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../api/client";
 import {
   ActionButton,
@@ -48,18 +49,14 @@ export function DormManagement() {
   const [returnKeyId, setReturnKeyId] = useState("");
   const [inspectionForm, setInspectionForm] = useState(initialInspection);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   const loadInspections = async (query = "") => {
     setLoading(true);
-    setError("");
     try {
       const response = await apiRequest<ApiResponse<{ inspections: Inspection[] }>>(`/dorm/inspections${query}`);
       setInspections(response.data.inspections);
-    } catch (err) {
+    } catch {
       setInspections([]);
-      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -71,50 +68,42 @@ export function DormManagement() {
 
   const handleAllocation = async (event: FormEvent) => {
     event.preventDefault();
-    setMessage("");
-    setError("");
     try {
       const response = await apiRequest<ApiResponse<{ dorm: { block: string; roomNumber: number } }>>("/dorm/allocate", {
         method: "POST",
         body: allocation,
       });
-      setMessage(`${response.message}: ${response.data.dorm.block} ${response.data.dorm.roomNumber}`);
+      toast.success(`${response.message}: ${response.data.dorm.block} ${response.data.dorm.roomNumber}`);
       setAllocation({ studentId: "", yearLevel: "freshman", isSpecialNeeds: false, department: "" });
     } catch (err) {
-      setError(getErrorMessage(err));
+      toast.error(getErrorMessage(err));
     }
   };
 
   const handleIssueKey = async (event: FormEvent) => {
     event.preventDefault();
-    setMessage("");
-    setError("");
     try {
       await apiRequest("/dorm/issue-key", { method: "POST", body: keyForm });
-      setMessage("Dorm key issued.");
+      toast.success("Dorm key issued");
       setKeyForm({ dormId: "", issuedTo: "", keyNumber: "" });
     } catch (err) {
-      setError(getErrorMessage(err));
+      toast.error(getErrorMessage(err));
     }
   };
 
   const handleReturnKey = async (event: FormEvent) => {
     event.preventDefault();
-    setMessage("");
-    setError("");
     try {
       await apiRequest("/dorm/return-key", { method: "PATCH", body: { keyId: returnKeyId } });
-      setMessage("Dorm key returned.");
+      toast.success("Dorm key returned");
       setReturnKeyId("");
     } catch (err) {
-      setError(getErrorMessage(err));
+      toast.error(getErrorMessage(err));
     }
   };
 
   const handleInspection = async (event: FormEvent) => {
     event.preventDefault();
-    setMessage("");
-    setError("");
     try {
       await apiRequest("/dorm/inspect", {
         method: "POST",
@@ -134,11 +123,11 @@ export function DormManagement() {
           },
         },
       });
-      setMessage("Dorm inspection recorded.");
+      toast.success("Inspection recorded");
       setInspectionForm(initialInspection);
       await loadInspections();
     } catch (err) {
-      setError(getErrorMessage(err));
+      toast.error(getErrorMessage(err));
     }
   };
 
@@ -153,9 +142,6 @@ export function DormManagement() {
   return (
     <div className="space-y-6">
       <PageHeader title="Proctor Dorm Management" description="Manage dorm allocation, key circulation, inspections, and damage follow-up from the proctor office." />
-
-      {message ? <EmptyState title="Action completed" description={message} /> : null}
-      {error ? <EmptyState title="Dorm action needs attention" description={error} /> : null}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Panel title="Allocate Dorm" description="Year level must be one of freshman, remedial, or senior.">
