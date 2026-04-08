@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { body } from 'express-validator';
+import { body, param } from 'express-validator';
 import { login, register, profile, refreshToken, logout, listUsers, getUserById, updateUser } from '../controllers/authController';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { validationResultHandler } from './validationHelpers';
