@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Complaint, { ComplaintPriority, ComplaintStatus } from '../models/Complaint';
 import User from '../models/User';
 import { sendSuccess, sendError, isValidId } from '../utils/response';
+import { STAFF_ROLES } from '../utils/roles';
 
 // POST /api/complaints
 // Student submits a complaint to the Student Union Office
@@ -173,13 +174,25 @@ export const assignComplaintHandler = async (req: Request, res: Response): Promi
       return;
     }
 
-    const handler = await User.findById(handledBy).select('role');
+    const handledByValue = handledBy.trim();
+    const handlerFilter = isValidId(handledByValue)
+      ? { _id: handledByValue }
+      : {
+          $or: [{ studentId: handledByValue }, { email: handledByValue.toLowerCase() }]
+        };
+
+    const handler = await User.findOne(handlerFilter).select('_id role');
     if (!handler) {
-      sendError(res, 'Handler not found', 404);
+      sendError(res, 'Handler not found. Use a valid user ID, student ID, or email.', 404);
       return;
     }
 
-    complaint.handledBy = new mongoose.Types.ObjectId(handledBy);
+    if (!STAFF_ROLES.includes(handler.role)) {
+      sendError(res, 'Handler must be a staff account', 400);
+      return;
+    }
+
+    complaint.handledBy = new mongoose.Types.ObjectId(String(handler._id));
     await complaint.save();
 
     sendSuccess(res, 'Complaint handler assigned', { complaint });
