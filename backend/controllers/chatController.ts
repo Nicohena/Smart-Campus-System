@@ -19,13 +19,19 @@ export const askAssistant = async (req: Request, res: Response): Promise<void> =
 
     sendSuccess(res, 'Assistant reply', { reply });
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('AI assistant error:', error);
-
     if (axios.isAxiosError(error)) {
+      // eslint-disable-next-line no-console
+      console.error('AI assistant axios error:', {
+        status: error.response?.status,
+        code: error.code,
+        message: error.message
+      });
       sendError(res, 'AI assistant is currently unavailable', 502);
       return;
     }
+
+    // eslint-disable-next-line no-console
+    console.error('AI assistant error:', error instanceof Error ? error.message : String(error));
 
     sendError(res, 'Could not process assistant request');
   }
