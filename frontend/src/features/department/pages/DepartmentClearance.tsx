@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { departmentApi } from "../services/departmentApi";
 import { ActionButton, EmptyState, PageHeader, Panel, StatusBadge, getErrorMessage } from "../../../components/admin/adminShared";
 
@@ -26,9 +27,10 @@ export function DepartmentClearance() {
   const handleApproval = async (id: string, status: boolean) => {
     try {
       await departmentApi.updateClearance(id, status);
+      toast.success("Department clearance approved");
       await loadRecords(); // Refresh to catch updated state
     } catch (err) {
-      alert(getErrorMessage(err));
+      toast.error(getErrorMessage(err));
     }
   };
 

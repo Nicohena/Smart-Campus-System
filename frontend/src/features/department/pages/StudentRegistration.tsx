@@ -1,7 +1,8 @@
 import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../../api/client";
-import { ActionButton, EmptyState, Field, PageHeader, Panel, TextInput, getErrorMessage } from "../../../components/admin/adminShared";
+import { ActionButton, Field, PageHeader, Panel, TextInput, getErrorMessage } from "../../../components/admin/adminShared";
 
 const emptyForm = {
   name: "",
@@ -15,14 +16,10 @@ const emptyForm = {
 export function StudentRegistration() {
   const [form, setForm] = useState(emptyForm);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setError("");
-    setMessage("");
 
     try {
       const body = {
@@ -31,10 +28,10 @@ export function StudentRegistration() {
       };
       // We use the general auth register endpoint configured to handle department inputs
       const response = await apiRequest<any>("/auth/register", { method: "POST", body });
-      setMessage(`Successfully registered student: ${response.data.user.name}`);
+      toast.success(`Successfully registered student: ${response.data.user.name}`);
       setForm(emptyForm);
     } catch (err) {
-      setError(getErrorMessage(err));
+      toast.error(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -51,9 +48,6 @@ export function StudentRegistration() {
           </Link>
         }
       />
-
-      {message ? <EmptyState title="Success" description={message} /> : null}
-      {error ? <EmptyState title="Registration Failed" description={error} /> : null}
 
       <Panel title="Student Details" description="Fill out the initial demographic identifiers for this student.">
         <form className="space-y-4 max-w-2xl" onSubmit={handleSubmit}>

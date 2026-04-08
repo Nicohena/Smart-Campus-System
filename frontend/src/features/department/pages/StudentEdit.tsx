@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import { departmentApi, type StudentProfile } from "../services/departmentApi";
 import { ActionButton, EmptyState, Field, PageHeader, Panel, Select, TextInput, getErrorMessage } from "../../../components/admin/adminShared";
 
@@ -43,6 +44,7 @@ export function StudentEdit() {
 
     try {
       await departmentApi.updateStudent(id, form);
+      toast.success("Student profile updated");
       navigate(`/portal/department/student/${id}`);
     } catch (err) {
       setError(getErrorMessage(err));
