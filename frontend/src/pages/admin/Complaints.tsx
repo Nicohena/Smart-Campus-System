@@ -115,7 +115,7 @@ export function Complaints() {
 
       {error ? <EmptyState title="Complaint actions need attention" description={error} /> : null}
 
-      <Panel title="Complaint Queue" description="Handler assignment expects the MongoDB user id accepted by the backend `handledBy` field.">
+      <Panel title="Complaint Queue" description="Assign using handler MongoDB user ID, staff ID, or email.">
         {complaints.length ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1120px] text-left text-sm">
@@ -177,7 +177,7 @@ export function Complaints() {
                           <TextInput
                             value={assignments[complaint._id] ?? ""}
                             onChange={(event) => setAssignments((current) => ({ ...current, [complaint._id]: event.target.value }))}
-                            placeholder="Handler user id"
+                            placeholder="Handler ID or email"
                           />
                           <ActionButton type="button" onClick={() => void assignHandler(complaint._id)} disabled={busyId === complaint._id}>
                             Assign
