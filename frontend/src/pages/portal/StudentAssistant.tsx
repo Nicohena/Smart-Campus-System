@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../api/client";
 import {
   ActionButton,
@@ -34,9 +35,11 @@ export function StudentAssistant() {
         body: { message: prompt.trim() },
       });
       setReply(response.data.reply);
+      toast.success("Assistant reply received");
     } catch (err) {
       setReply("");
       setError(getErrorMessage(err));
+      toast.error("Assistant is unavailable right now");
     } finally {
       setLoading(false);
     }
