@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../api/client";
 import {
   ActionButton,
@@ -11,7 +12,6 @@ import {
   StatusBadge,
   TextArea,
   formatDate,
-  getErrorMessage,
   titleCase,
 } from "../../components/admin/adminShared";
 
@@ -32,18 +32,14 @@ export function StudentIssues() {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   const loadIssues = async () => {
     setLoading(true);
-    setError("");
     try {
       const response = await apiRequest<ApiResponse<{ issues: Issue[] }>>("/issues/my-issues");
       setIssues(response.data.issues);
-    } catch (err) {
+    } catch {
       setIssues([]);
-      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -56,18 +52,16 @@ export function StudentIssues() {
   const reportIssue = async (event: FormEvent) => {
     event.preventDefault();
     setSubmitting(true);
-    setMessage("");
-    setError("");
     try {
-      const response = await apiRequest<ApiResponse<{ issue: Issue }>>("/issues/report", {
+      await apiRequest<ApiResponse<{ issue: Issue }>>("/issues/report", {
         method: "POST",
         body: { issueType, description },
       });
-      setMessage(response.message);
+      toast.success("Issue reported successfully");
       setDescription("");
       await loadIssues();
-    } catch (err) {
-      setError(getErrorMessage(err));
+    } catch {
+      // Error toast is handled by apiRequest
     } finally {
       setSubmitting(false);
     }
@@ -76,9 +70,6 @@ export function StudentIssues() {
   return (
     <div className="space-y-6">
       <PageHeader title="My Maintenance Issues" description="Report a maintenance issue and monitor its progress." />
-
-      {message ? <EmptyState title="Issue reported" description={message} /> : null}
-      {error ? <EmptyState title="Issue reporting needs attention" description={error} /> : null}
 
       <div className="grid gap-6 xl:grid-cols-[0.75fr_1.25fr]">
         <Panel title="Report Issue" description="Your current dorm assignment is used automatically when available.">

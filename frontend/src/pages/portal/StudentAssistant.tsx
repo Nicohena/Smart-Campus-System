@@ -4,13 +4,11 @@ import { apiRequest } from "../../api/client";
 import {
   ActionButton,
   ApiResponse,
-  EmptyState,
   Field,
   PageHeader,
   Panel,
   StatusBadge,
   TextArea,
-  getErrorMessage,
 } from "../../components/admin/adminShared";
 
 interface AssistantReply {
@@ -21,14 +19,12 @@ export function StudentAssistant() {
   const [prompt, setPrompt] = useState("");
   const [reply, setReply] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const askAssistant = async (event: FormEvent) => {
     event.preventDefault();
     if (!prompt.trim()) return;
 
     setLoading(true);
-    setError("");
     try {
       const response = await apiRequest<ApiResponse<AssistantReply>>("/assistant/chat", {
         method: "POST",
@@ -36,9 +32,8 @@ export function StudentAssistant() {
       });
       setReply(response.data.reply);
       toast.success("Assistant reply received");
-    } catch (err) {
+    } catch {
       setReply("");
-      setError(getErrorMessage(err));
       toast.error("Assistant is unavailable right now");
     } finally {
       setLoading(false);
@@ -48,8 +43,6 @@ export function StudentAssistant() {
   return (
     <div className="space-y-6">
       <PageHeader title="AI Assistant" description="Ask campus questions using the authenticated assistant endpoint." />
-
-      {error ? <EmptyState title="Assistant unavailable" description={error} /> : null}
 
       <Panel title="Ask a Question" description="Students can use the AI assistant for campus help and service guidance.">
         <form className="space-y-4" onSubmit={askAssistant}>

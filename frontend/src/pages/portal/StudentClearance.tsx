@@ -11,7 +11,6 @@ import {
   StatusBadge,
   TextInput,
   formatDate,
-  getErrorMessage,
   titleCase,
 } from "../../components/admin/adminShared";
 
@@ -33,18 +32,14 @@ export function StudentClearance() {
   const [academicYear, setAcademicYear] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   const loadRecords = async () => {
     setLoading(true);
-    setError("");
     try {
       const response = await apiRequest<ApiResponse<{ records: ClearanceRecord[] }>>("/clearance/my-clearance");
       setRecords(response.data.records);
-    } catch (err) {
+    } catch {
       setRecords([]);
-      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -57,19 +52,16 @@ export function StudentClearance() {
   const submitRequest = async (event: FormEvent) => {
     event.preventDefault();
     setSubmitting(true);
-    setMessage("");
-    setError("");
     try {
-      const response = await apiRequest<ApiResponse<{ clearance: ClearanceRecord }>>("/clearance/request", {
+      await apiRequest<ApiResponse<{ clearance: ClearanceRecord }>>("/clearance/request", {
         method: "POST",
         body: { academicYear },
       });
-      setMessage(response.message);
       toast.success("Clearance request submitted");
       setAcademicYear("");
       await loadRecords();
-    } catch (err) {
-      setError(getErrorMessage(err));
+    } catch {
+      // Error toast is handled by apiRequest
     } finally {
       setSubmitting(false);
     }
@@ -78,9 +70,6 @@ export function StudentClearance() {
   return (
     <div className="space-y-6">
       <PageHeader title="My Clearance" description="Submit a clearance request and track each approval checkpoint." />
-
-      {message ? <EmptyState title="Request submitted" description={message} /> : null}
-      {error ? <EmptyState title="Clearance needs attention" description={error} /> : null}
 
       <div className="grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
         <Panel title="Request Clearance" description="Students can request one clearance record per academic year.">

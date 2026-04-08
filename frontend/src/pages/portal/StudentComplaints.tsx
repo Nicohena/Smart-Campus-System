@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../api/client";
 import {
   ActionButton,
@@ -12,7 +13,6 @@ import {
   TextArea,
   TextInput,
   formatDate,
-  getErrorMessage,
   titleCase,
 } from "../../components/admin/adminShared";
 
@@ -34,18 +34,14 @@ export function StudentComplaints() {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   const loadComplaints = async () => {
     setLoading(true);
-    setError("");
     try {
       const response = await apiRequest<ApiResponse<{ complaints: Complaint[] }>>("/complaints/my");
       setComplaints(response.data.complaints);
-    } catch (err) {
+    } catch {
       setComplaints([]);
-      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -58,19 +54,17 @@ export function StudentComplaints() {
   const submitComplaint = async (event: FormEvent) => {
     event.preventDefault();
     setSubmitting(true);
-    setMessage("");
-    setError("");
     try {
-      const response = await apiRequest<ApiResponse<{ complaint: Complaint }>>("/complaints", {
+      await apiRequest<ApiResponse<{ complaint: Complaint }>>("/complaints", {
         method: "POST",
         body: { category, title, description },
       });
-      setMessage(response.message);
+      toast.success("Complaint submitted successfully");
       setTitle("");
       setDescription("");
       await loadComplaints();
-    } catch (err) {
-      setError(getErrorMessage(err));
+    } catch {
+      // Error toast is handled by apiRequest
     } finally {
       setSubmitting(false);
     }
@@ -79,9 +73,6 @@ export function StudentComplaints() {
   return (
     <div className="space-y-6">
       <PageHeader title="My Complaints" description="Submit complaints to the student union and follow their progress." />
-
-      {message ? <EmptyState title="Complaint submitted" description={message} /> : null}
-      {error ? <EmptyState title="Complaint submission needs attention" description={error} /> : null}
 
       <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
         <Panel title="Submit Complaint" description="Student union staff manage the response after submission.">
