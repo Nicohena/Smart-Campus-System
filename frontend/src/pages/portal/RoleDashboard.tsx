@@ -1,5 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  Cell 
+} from "recharts";
 import { Dashboard } from "../admin/Dashboard";
 import { apiRequest } from "../../api/client";
 import { StatCard } from "../../components/admin/StatCard";
@@ -23,6 +33,27 @@ interface DashboardStats {
   clearances: number;
 }
 
+interface DepartmentAnalytics {
+  totalStudents: number;
+  byYear: Bucket[];
+  activeIssuesOrComplaintsStudents: number;
+  clearanceCompletionRate: number;
+  completedClearances: number;
+  totalClearances: number;
+}
+
+interface IssueAnalytics {
+  byType: Bucket[];
+  byStatus: Bucket[];
+  byBlock: Bucket[]
+}
+
+interface ComplaintAnalytics {
+  byCategory: Bucket[];
+  byStatus: Bucket[];
+  byPriority: Bucket[]
+}
+
 interface Bucket {
   _id: string | null;
   count: number;
@@ -37,10 +68,11 @@ const roleDescriptions = {
 } as const;
 
 export function RoleDashboard() {
-  const user = getStoredUser();
+  const user = useMemo(() => getStoredUser(), []);
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [issueAnalytics, setIssueAnalytics] = useState<{ byType: Bucket[]; byStatus: Bucket[]; byBlock: Bucket[] } | null>(null);
-  const [complaintAnalytics, setComplaintAnalytics] = useState<{ byCategory: Bucket[]; byStatus: Bucket[]; byPriority: Bucket[] } | null>(null);
+  const [issueAnalytics, setIssueAnalytics] = useState<IssueAnalytics | null>(null);
+  const [complaintAnalytics, setComplaintAnalytics] = useState<ComplaintAnalytics | null>(null);
+  const [departmentAnalytics, setDepartmentAnalytics] = useState<DepartmentAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -55,22 +87,37 @@ export function RoleDashboard() {
       setError("");
 
       try {
-        const statsP = apiRequest<ApiResponse<DashboardStats>>("/analytics/dashboard").catch(() => null);
-        let issuesP = Promise.resolve(null as any);
-        let complaintsP = Promise.resolve(null as any);
+        if (user.role === "department") {
+          const departmentRes = await apiRequest<ApiResponse<DepartmentAnalytics>>("/analytics/department");
+          setDepartmentAnalytics(departmentRes.data);
+          return;
+        }
+
+        const requests: Promise<unknown>[] = [apiRequest<ApiResponse<DashboardStats>>("/analytics/dashboard")];
 
         if (user.role === "proctor") {
-          issuesP = apiRequest<ApiResponse<{ byType: Bucket[]; byStatus: Bucket[]; byBlock: Bucket[] }>>("/analytics/issues").catch(() => null);
+          requests.push(apiRequest<ApiResponse<IssueAnalytics>>("/analytics/issues"));
         }
+
         if (user.role === "student_union") {
-          complaintsP = apiRequest<ApiResponse<{ byCategory: Bucket[]; byStatus: Bucket[]; byPriority: Bucket[] }>>("/analytics/complaints").catch(() => null);
+          requests.push(apiRequest<ApiResponse<ComplaintAnalytics>>("/analytics/complaints"));
         }
 
-        const [statsRes, issueRes, complaintRes] = await Promise.all([statsP, issuesP, complaintsP]);
+        const results = await Promise.all(requests);
+        const [statsRes, secondaryRes] = results as [
+          ApiResponse<DashboardStats>,
+          ApiResponse<IssueAnalytics> | ApiResponse<ComplaintAnalytics> | undefined,
+        ];
 
-        if (statsRes) setStats(statsRes.data);
-        if (issueRes) setIssueAnalytics(issueRes.data);
-        if (complaintRes) setComplaintAnalytics(complaintRes.data);
+        setStats(statsRes.data);
+
+        if (user.role === "proctor" && secondaryRes) {
+          setIssueAnalytics((secondaryRes as ApiResponse<IssueAnalytics>).data);
+        }
+
+        if (user.role === "student_union" && secondaryRes) {
+          setComplaintAnalytics((secondaryRes as ApiResponse<ComplaintAnalytics>).data);
+        }
       } catch (err) {
         setError(getErrorMessage(err));
       } finally {
@@ -79,7 +126,7 @@ export function RoleDashboard() {
     };
 
     void loadData();
-  }, [user?.role]);
+  }, [user?.role, user?._id]);
 
   if (!user) {
     return <EmptyState title="No active session" description="Sign in to load your role dashboard." />;
@@ -109,14 +156,23 @@ export function RoleDashboard() {
       {error ? <EmptyState title="Dashboard partially unavailable" description={error} /> : null}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {user.role === "proctor" || user.role === "student_union" ? (
+        {(user.role === "proctor" || user.role === "student_union") && (
           <>
             <StatCard title="Complaints" value={stats?.complaints ?? (loading ? "..." : "—")} subtitle="Total records" />
             <StatCard title="Issues" value={stats?.issues ?? (loading ? "..." : "—")} subtitle="Maintenance backlog" />
             <StatCard title="Dorm Inspections" value={stats?.inspections ?? (loading ? "..." : "—")} subtitle="Inspection history" />
             <StatCard title="Clearances" value={stats?.clearances ?? (loading ? "..." : "—")} subtitle="Submitted requests" />
           </>
-        ) : null}
+        )}
+
+        {user.role === "department" && (
+          <>
+            <StatCard title="Enrollment" value={departmentAnalytics?.totalStudents ?? (loading ? "..." : "—")} subtitle="Total students" />
+            <StatCard title="Active Reports" value={departmentAnalytics?.activeIssuesOrComplaintsStudents ?? (loading ? "..." : "—")} subtitle="Issues/Complaints" />
+            <StatCard title="Clearance Rate" value={departmentAnalytics?.clearanceCompletionRate ? `${departmentAnalytics.clearanceCompletionRate}%` : (loading ? "..." : "—")} subtitle="Completion stage" />
+            <StatCard title="Requests" value={departmentAnalytics?.totalClearances ?? (loading ? "..." : "—")} subtitle="Total clearances" />
+          </>
+        )}
       </div>
 
       {user.role === "proctor" && (
@@ -143,6 +199,80 @@ export function RoleDashboard() {
             </div>
           ) : (
             <EmptyState title="Loading Complaint Analytics" description={loading ? "Loading metrics..." : "Metrics are not available."} />
+          )}
+        </Panel>
+      )}
+
+      {user.role === "department" && (
+        <Panel title="Enrollment Analytics" description="Student distribution across academic years.">
+          {departmentAnalytics ? (
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2 rounded-2xl border border-white/5 bg-[#141415] p-5 shadow-lg overflow-hidden relative">
+                <p className="text-sm font-medium text-white mb-6">Students per Academic Year</p>
+                <div className="h-[240px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={departmentAnalytics.byYear}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                      <XAxis 
+                        dataKey="_id" 
+                        stroke="#71717a" 
+                        fontSize={12} 
+                        tickLine={false} 
+                        axisLine={false} 
+                      />
+                      <YAxis 
+                        stroke="#71717a" 
+                        fontSize={12} 
+                        tickLine={false} 
+                        axisLine={false} 
+                        allowDecimals={false}
+                      />
+                      <Tooltip 
+                        cursor={{ fill: 'white', opacity: 0.03 }}
+                        contentStyle={{ 
+                          backgroundColor: '#18181b', 
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          color: '#fff'
+                        }}
+                        itemStyle={{ color: '#a855f7' }}
+                      />
+                      <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                        {departmentAnalytics.byYear.map((_, index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={index % 2 === 0 ? "#9333ea" : "#7c3aed"} 
+                            fillOpacity={0.8}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <AnalyticsList title="Enrollment Counts" items={departmentAnalytics.byYear} />
+                
+                <div className="rounded-2xl border border-white/5 bg-[#141415] p-5 shadow-lg group hover:border-purple-500/20 transition-colors">
+                   <p className="text-sm font-medium text-white mb-2">Clearance Summary</p>
+                   <div className="flex items-end gap-3 mt-1">
+                      <span className="text-3xl font-bold text-white leading-none">{departmentAnalytics.completedClearances}</span>
+                      <span className="text-zinc-500 mb-0.5 text-sm">/ {departmentAnalytics.totalClearances} Approved</span>
+                   </div>
+                   <div className="mt-5 w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-purple-600 h-full transition-all duration-1000 shadow-[0_0_10px_rgba(168,85,247,0.5)]" 
+                        style={{ width: `${departmentAnalytics.clearanceCompletionRate}%` }}
+                      ></div>
+                   </div>
+                   <p className="mt-3 text-xs text-zinc-500">{departmentAnalytics.clearanceCompletionRate}% Progress overall </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <EmptyState title="Loading Enrollment Analytics" description={loading ? "Loading metrics..." : "Metrics are not available."} />
           )}
         </Panel>
       )}
