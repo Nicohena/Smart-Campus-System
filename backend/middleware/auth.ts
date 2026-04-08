@@ -8,6 +8,7 @@ import { UserRole } from '../utils/roles';
 export interface JwtPayload {
   id: string;
   role: UserRole;
+  department?: string;
   iat?: number;
   exp?: number;
 }
