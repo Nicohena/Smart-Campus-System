@@ -25,13 +25,32 @@ const SYSTEM_PROMPT =
   '- clearance process\n\n' +
   'Provide short and helpful answers.';
 
+const DEFAULT_FALLBACK_REPLY =
+  'The AI assistant is temporarily unavailable. For dorm electrical issues, submit a maintenance report through the dorm/maintenance office and include your dorm, room number, and issue details.';
+
+const buildFallbackReply = (question: string): string => {
+  const normalized = question.toLowerCase();
+  const isDormMaintenanceQuestion =
+    normalized.includes('dorm') ||
+    normalized.includes('electrical') ||
+    normalized.includes('maintenance') ||
+    normalized.includes('power') ||
+    normalized.includes('light');
+
+  if (isDormMaintenanceQuestion) {
+    return 'For dorm electrical issues, submit a maintenance report to the dorm maintenance office and include your dorm, room number, and issue details for faster handling.';
+  }
+
+  return DEFAULT_FALLBACK_REPLY;
+};
+
 // Sends a student question to DeepSeek and returns the assistant reply.
 export const askCampusAssistant = async (question: string): Promise<string> => {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   const apiUrl = process.env.DEEPSEEK_API_URL;
 
   if (!apiKey || !apiUrl) {
-    throw new Error('DeepSeek API credentials are not configured');
+    return buildFallbackReply(question);
   }
 
   const messages: DeepSeekMessage[] = [
@@ -45,26 +64,51 @@ export const askCampusAssistant = async (question: string): Promise<string> => {
     }
   ];
 
-  const response = await axios.post<DeepSeekResponse>(
-    apiUrl,
-    {
-      model: 'deepseek-chat',
-      messages,
-      temperature: 0.2
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+  try {
+    const response = await axios.post<DeepSeekResponse>(
+      apiUrl,
+      {
+        model: 'deepseek-chat',
+        messages,
+        temperature: 0.2
       },
-      timeout: 20000
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 20000
+      }
+    );
+
+    const content = response.data?.choices?.[0]?.message?.content?.trim() || '';
+    if (!content) {
+      return buildFallbackReply(question);
     }
-  );
 
-  const content = response.data?.choices?.[0]?.message?.content?.trim() || '';
-  if (!content) {
-    throw new Error('DeepSeek returned an empty response');
+    return content;
+  } catch (error) {
+    const maybeError = error as {
+      response?: { status?: number };
+      code?: string;
+      isAxiosError?: boolean;
+    };
+    const status = maybeError?.response?.status;
+    const code = maybeError?.code;
+    const isAxiosLike = axios.isAxiosError(error) || maybeError?.isAxiosError === true;
+
+    if (isAxiosLike) {
+      // Billing / quota / upstream temporary issues should not break UX.
+      if (status === 402 || status === 429 || (status !== undefined && status >= 500)) {
+        return buildFallbackReply(question);
+      }
+
+      // Timeouts and network errors also receive fallback guidance.
+      if (code === 'ECONNABORTED' || code === 'ENOTFOUND' || code === 'ECONNRESET') {
+        return buildFallbackReply(question);
+      }
+    }
+
+    throw error;
   }
-
-  return content;
 };
