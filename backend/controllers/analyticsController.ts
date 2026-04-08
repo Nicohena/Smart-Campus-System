@@ -7,6 +7,21 @@ import User from '../models/User';
 import { generateCampusInsights } from '../services/aiAnalyticsService';
 import { sendSuccess, sendError } from '../utils/response';
 
+const resolveDepartmentName = async (userId?: string, departmentFromToken?: string): Promise<string | null> => {
+  if (departmentFromToken?.trim()) {
+    return departmentFromToken.trim();
+  }
+
+  if (!userId) {
+    console.log('resolveDepartmentName: No userId provided');
+    return null;
+  }
+
+  const user = await User.findById(userId).select('department');
+  console.log('resolveDepartmentName: Found user in DB:', user);
+  return user?.department?.trim() || null;
+};
+
 // GET /api/analytics/dashboard
 // Basic dashboard counts for admins/staff
 export const getDashboardAnalytics = async (req: Request, res: Response): Promise<void> => {
@@ -124,7 +139,7 @@ export const getAiInsights = async (req: Request, res: Response): Promise<void> 
 // GET /api/analytics/department
 export const getDepartmentAnalytics = async (req: Request, res: Response): Promise<void> => {
   try {
-    const departmentName = req.user?.department;
+    const departmentName = await resolveDepartmentName(req.user?.id, req.user?.department);
     if (!departmentName) {
       sendError(res, 'No department assigned', 400);
       return;
