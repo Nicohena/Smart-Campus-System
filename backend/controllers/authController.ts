@@ -82,7 +82,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const payload = { id: user._id.toString(), role: user.role };
+    const payload = { id: user._id.toString(), role: user.role, department: user.department };
     const token = signAccessToken(payload);
 
     // Generate refresh token and persist to RefreshToken collection
@@ -133,7 +133,7 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
     }
 
     const user = (tokenDoc.user as any);
-    const payload = { id: user._id.toString(), role: user.role };
+    const payload = { id: user._id.toString(), role: user.role, department: user.department };
     const token = signAccessToken(payload);
 
     // Rotate refresh token: revoke old and issue a new one
