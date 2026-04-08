@@ -6,6 +6,19 @@ import DormInspection from '../models/DormInspection';
 import User from '../models/User';
 import { sendSuccess, sendError, isValidId } from '../utils/response';
 
+const resolveDepartmentName = async (userId?: string, departmentFromToken?: string): Promise<string | null> => {
+  if (departmentFromToken?.trim()) {
+    return departmentFromToken.trim();
+  }
+
+  if (!userId) {
+    return null;
+  }
+
+  const user = await User.findById(userId).select('department');
+  return user?.department?.trim() || null;
+};
+
 const areAllApprovalsComplete = (clearance: IClearance): boolean => {
   return (
     clearance.departmentApproval.status &&
@@ -104,7 +117,7 @@ export const getAllClearanceRequests = async (req: Request, res: Response): Prom
 // GET /api/clearance/department
 export const getDepartmentClearanceRequests = async (req: Request, res: Response): Promise<void> => {
   try {
-    const departmentName = req.user?.department;
+    const departmentName = await resolveDepartmentName(req.user?.id, req.user?.department);
     if (!departmentName) {
       sendError(res, 'Department not associated with user', 400);
       return;
