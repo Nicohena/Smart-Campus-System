@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Key, Hash, ArrowRight, Loader2 } from "lucide-react"
+import toast from "react-hot-toast"
 import { authApi } from "../api/auth"
 import { getDefaultRouteForRole } from "../lib/portal"
 
@@ -16,6 +17,7 @@ export function Login() {
 
     if (!studentId || !password) {
       setError("Please enter your ID and password.")
+      toast.error("Please enter your ID and password.")
       return
     }
 
@@ -26,6 +28,7 @@ export function Login() {
       // Store token and user info
       localStorage.setItem("token", data.data.token)
       localStorage.setItem("user", JSON.stringify(data.data.user))
+      toast.success("Login successful")
 
       navigate(getDefaultRouteForRole(data.data.user.role))
     } catch (err: any) {
