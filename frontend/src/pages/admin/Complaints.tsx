@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../api/client";
 import {
   ActionButton,
@@ -65,6 +66,7 @@ export function Complaints() {
     setBusyId(complaintId);
     try {
       await apiRequest(`/complaints/${complaintId}/status`, { method: "PATCH", body: { status } });
+      toast.success("Complaint status updated");
       await loadComplaints();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -77,6 +79,7 @@ export function Complaints() {
     setBusyId(complaintId);
     try {
       await apiRequest(`/complaints/${complaintId}/priority`, { method: "PATCH", body: { priority } });
+      toast.success("Complaint priority updated");
       await loadComplaints();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -92,6 +95,7 @@ export function Complaints() {
     setBusyId(complaintId);
     try {
       await apiRequest(`/complaints/${complaintId}/assign`, { method: "PATCH", body: { handledBy } });
+      toast.success("Complaint assigned successfully");
       setAssignments((current) => ({ ...current, [complaintId]: "" }));
       await loadComplaints();
     } catch (err) {
