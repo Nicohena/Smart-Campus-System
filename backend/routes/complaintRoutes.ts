@@ -45,7 +45,7 @@ router.patch(
   '/:id/assign',
   authMiddleware,
   requireRole(['student_union']),
-  [param('id').isMongoId(), body('handledBy').isMongoId()],
+  [param('id').isMongoId(), body('handledBy').isString().trim().isLength({ min: 1 })],
   validationResultHandler,
   assignComplaintHandler
 );
