@@ -50,4 +50,24 @@ describe('Complaints System Module', () => {
 
     expect(update.status).toBe(200);
   });
+
+  it('should allow assigning a complaint handler using staff studentId', async () => {
+    const { token: studentToken } = await createAndLogin(app, 'student');
+    const { token: unionToken, user: unionUser } = await createAndLogin(app, 'student_union');
+
+    const submit = await request(app)
+      .post('/api/complaints')
+      .set(authHeader(studentToken))
+      .send({ category: 'dorm', title: 'Dorm Power', description: 'Power outlets not working' });
+
+    const complaintId = submit.body.data.complaint._id;
+
+    const assign = await request(app)
+      .patch(`/api/complaints/${complaintId}/assign`)
+      .set(authHeader(unionToken))
+      .send({ handledBy: unionUser.studentId });
+
+    expect(assign.status).toBe(200);
+    expect(assign.body.data.complaint.handledBy).toBeTruthy();
+  });
 });
