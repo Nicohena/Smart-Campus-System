@@ -1,3 +1,5 @@
+import toast from "react-hot-toast"
+
 export const API_BASE = "http://localhost:5000/api"
 
 export interface ApiResponse<T> {
@@ -27,10 +29,11 @@ interface RequestOptions {
   method?: string
   body?: unknown
   headers?: Record<string, string>
+  suppressErrorToast?: boolean
 }
 
 export async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { method = "GET", body, headers = {} } = options
+  const { method = "GET", body, headers = {}, suppressErrorToast = false } = options
 
   const config: RequestInit = {
     method,
@@ -67,11 +70,12 @@ export async function apiRequest<T>(endpoint: string, options: RequestOptions = 
           .join(", ")
       : ""
 
-    throw new ApiRequestError(
-      detailMessage ? `${data?.message || "Request failed"} (${detailMessage})` : data?.message || "Request failed",
-      res.status,
-      details,
-    )
+    const message = detailMessage ? `${data?.message || "Request failed"} (${detailMessage})` : data?.message || "Request failed"
+    if (!suppressErrorToast) {
+      toast.error(message)
+    }
+
+    throw new ApiRequestError(message, res.status, details)
   }
 
   return data as T
