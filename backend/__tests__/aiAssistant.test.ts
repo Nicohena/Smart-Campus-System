@@ -26,6 +26,23 @@ describe('AI Campus Assistant Chat Module', () => {
       .send({ message: 'How do I replace my lost ID?' });
 
     expect(response.status).toBe(200);
-    expect(response.body.reply).toBeTruthy();
+    expect(response.body.data?.reply).toBeTruthy();
+  });
+
+  it('should return fallback reply when DeepSeek responds with 402', async () => {
+    const { token } = await createAndLogin(app, 'student');
+    mockedAxios.post.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { status: 402 },
+      message: 'Payment Required'
+    } as any);
+
+    const response = await request(app)
+      .post('/api/assistant/chat')
+      .set(authHeader(token))
+      .send({ message: "where do i go to fix dorms' electrical issue" });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data?.reply).toMatch(/dorm|maintenance/i);
   });
 });
