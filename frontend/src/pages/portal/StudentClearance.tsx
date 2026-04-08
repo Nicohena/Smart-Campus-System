@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { apiRequest } from "../../api/client";
 import {
   ActionButton,
@@ -64,6 +65,7 @@ export function StudentClearance() {
         body: { academicYear },
       });
       setMessage(response.message);
+      toast.success("Clearance request submitted");
       setAcademicYear("");
       await loadRecords();
     } catch (err) {
