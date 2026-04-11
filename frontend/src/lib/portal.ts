@@ -3,6 +3,7 @@ import {
   Building2,
   ClipboardCheck,
   Compass,
+  IdCard,
   LayoutDashboard,
   MapPinned,
   MessageSquareText,
@@ -33,18 +34,21 @@ export const portalNavItems: Record<UserRole, PortalNavItem[]> = {
   security: [
     { label: "Overview", to: "/portal", icon: LayoutDashboard, end: true },
     { label: "Devices", to: "/portal/devices", icon: MonitorSmartphone },
+    { label: "Lost ID Requests", to: "/portal/lost-ids", icon: IdCard },
   ],
   proctor: [
     { label: "Overview", to: "/portal", icon: LayoutDashboard, end: true },
     { label: "Dorms", to: "/portal/dorms", icon: Building2 },
     { label: "Clearances", to: "/portal/clearances", icon: ClipboardCheck },
     { label: "Issues", to: "/portal/issues", icon: TriangleAlert },
+    { label: "Lost ID Requests", to: "/portal/lost-ids", icon: IdCard },
   ],
   department: [
     { label: "Overview", to: "/portal", icon: LayoutDashboard, end: true },
     { label: "Students", to: "/portal/department/students", icon: Users },
     { label: "Add Student", to: "/portal/department/register", icon: UserPlus },
     { label: "Clearance", to: "/portal/department/clearances", icon: ClipboardCheck },
+    { label: "Lost ID Requests", to: "/portal/lost-ids", icon: IdCard },
     { label: "Notices", to: "/portal/department/notices", icon: MessageSquareText },
   ],
   student_union: [
@@ -54,11 +58,26 @@ export const portalNavItems: Record<UserRole, PortalNavItem[]> = {
   student: [
     { label: "Overview", to: "/portal", icon: LayoutDashboard, end: true },
     { label: "Clearance", to: "/portal/my-clearance", icon: ClipboardCheck },
+    { label: "Lost ID", to: "/portal/my-lost-id", icon: IdCard },
     { label: "Complaints", to: "/portal/my-complaints", icon: MessageSquareText },
     { label: "Maintenance", to: "/portal/my-issues", icon: TriangleAlert },
     { label: "Notices", to: "/portal/notices-feed", icon: ShieldCheck },
     { label: "Navigation", to: "/portal/navigation", icon: Compass },
     { label: "AI Assistant", to: "/portal/assistant", icon: Bot },
+  ],
+  library: [
+    { label: "Overview", to: "/portal", icon: LayoutDashboard, end: true },
+    { label: "Clearances", to: "/portal/clearances", icon: ClipboardCheck },
+    { label: "Lost ID Requests", to: "/portal/lost-ids", icon: IdCard },
+  ],
+  cafeteria: [
+    { label: "Overview", to: "/portal", icon: LayoutDashboard, end: true },
+    { label: "Clearances", to: "/portal/clearances", icon: ClipboardCheck },
+    { label: "Lost ID Requests", to: "/portal/lost-ids", icon: IdCard },
+  ],
+  registrar: [
+    { label: "Overview", to: "/portal", icon: LayoutDashboard, end: true },
+    { label: "Lost ID Requests", to: "/portal/lost-ids", icon: IdCard },
   ],
 };
 

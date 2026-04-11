@@ -50,7 +50,8 @@ export function formatDate(value?: string | null) {
   return new Date(value).toLocaleString();
 }
 
-export function titleCase(value: string) {
+export function titleCase(value?: string | null) {
+  if (!value) return "";
   return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
@@ -162,13 +163,15 @@ export function Field({
   label,
   children,
   hint,
+  className,
 }: {
   label: string;
   children: ReactNode;
   hint?: string;
+  className?: string;
 }) {
   return (
-    <label className="block space-y-2">
+    <label className={classNames("block space-y-2", className)}>
       <span className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-500">{label}</span>
       {children}
       {hint ? <span className="block text-xs text-zinc-500">{hint}</span> : null}

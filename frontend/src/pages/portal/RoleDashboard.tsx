@@ -65,6 +65,9 @@ const roleDescriptions = {
   department: "Register students, manage student records, and keep department assignments current.",
   student_union: "Receive complaints, manage responses, and escalate unresolved student concerns.",
   student: "Access your personal campus services, notices, navigation, and AI assistant.",
+  library: "Review student clearance requests and manage lost ID stamp approvals for the library.",
+  cafeteria: "Review student clearance requests and manage lost ID stamp approvals for the cafeteria.",
+  registrar: "Manage lost ID replacement workflow: request payment, verify receipts, and issue temporary and permanent IDs.",
 } as const;
 
 export function RoleDashboard() {
@@ -77,7 +80,7 @@ export function RoleDashboard() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!user || user.role === "admin" || user.role === "student") {
+    if (!user || user.role === "admin" || user.role === "student" || user.role === "library" || user.role === "cafeteria" || user.role === "registrar") {
       setLoading(false);
       return;
     }

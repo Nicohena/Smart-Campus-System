@@ -4,7 +4,7 @@ import { body, param } from 'express-validator';
 import { login, register, profile, refreshToken, logout, listUsers, getUserById, updateUser } from '../controllers/authController';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { validationResultHandler } from './validationHelpers';
-import { STAFF_ROLES } from '../utils/roles';
+import { USER_ROLES } from '../utils/roles';
 
 const router = Router();
 
@@ -31,11 +31,11 @@ router.post(
 	authMiddleware,
 	requireRole(['department', 'admin']),
 	[
-		body('name').isString().trim().escape(),
-		body('studentId').isString().trim().escape(),
+		body('name').isString().trim().notEmpty().escape(),
+		body('studentId').isString().trim().notEmpty().escape(),
 		body('password').isLength({ min: 8 }),
     body('department').optional().isString().trim().escape(),
-    body('role').optional().isIn(STAFF_ROLES)
+    body('role').optional().isIn([...USER_ROLES])
 	],
 	validationResultHandler,
 	register

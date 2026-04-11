@@ -17,6 +17,8 @@ import { StudentComplaints } from "./pages/portal/StudentComplaints";
 import { StudentNotices } from "./pages/portal/StudentNotices";
 import { StudentNavigation } from "./pages/portal/StudentNavigation";
 import { StudentAssistant } from "./pages/portal/StudentAssistant";
+import { StudentLostId } from "./pages/portal/StudentLostId";
+import { LostIdRequests } from "./pages/admin/LostIdRequests";
 
 import { StudentList } from "./features/department/pages/StudentList";
 import { StudentRegistration } from "./features/department/pages/StudentRegistration";
@@ -107,13 +109,15 @@ function App() {
         <Route index element={<RoleDashboard />} />
         <Route path="complaints" element={<RoleRoute allowedRoles={["student_union"]} element={<Complaints />} />} />
         <Route path="issues" element={<RoleRoute allowedRoles={["proctor"]} element={<Issues />} />} />
-        <Route path="clearances" element={<RoleRoute allowedRoles={["proctor"]} element={<Clearances />} />} />
+        <Route path="clearances" element={<RoleRoute allowedRoles={["proctor", "library", "cafeteria"]} element={<Clearances />} />} />
+        <Route path="lost-ids" element={<RoleRoute allowedRoles={["proctor", "security", "department", "library", "cafeteria", "registrar"]} element={<LostIdRequests />} />} />
         <Route path="notices" element={<RoleRoute allowedRoles={["admin"]} element={<Notices />} />} />
         <Route path="dorms" element={<RoleRoute allowedRoles={["proctor"]} element={<DormManagement />} />} />
         <Route path="devices" element={<RoleRoute allowedRoles={["security"]} element={<Devices />} />} />
         <Route path="locations" element={<RoleRoute allowedRoles={["admin"]} element={<Locations />} />} />
         <Route path="users" element={<RoleRoute allowedRoles={["admin", "department"]} element={<Users />} />} />
         <Route path="my-clearance" element={<RoleRoute allowedRoles={["student"]} element={<StudentClearance />} />} />
+        <Route path="my-lost-id" element={<RoleRoute allowedRoles={["student"]} element={<StudentLostId />} />} />
         <Route path="my-issues" element={<RoleRoute allowedRoles={["student"]} element={<StudentIssues />} />} />
         <Route path="my-complaints" element={<RoleRoute allowedRoles={["student"]} element={<StudentComplaints />} />} />
         <Route path="notices-feed" element={<RoleRoute allowedRoles={["student"]} element={<StudentNotices />} />} />
