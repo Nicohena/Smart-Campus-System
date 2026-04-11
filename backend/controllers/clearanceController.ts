@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Clearance, { IClearance } from '../models/Clearance';
-import Dorm from '../models/Dorm';
-import DormInspection from '../models/DormInspection';
 import User from '../models/User';
 import { sendSuccess, sendError, isValidId } from '../utils/response';
 
@@ -172,52 +170,6 @@ const markApproval = async (
 
   if (clearance[section].status) {
     sendError(res, 'This approval is already completed', 400);
-    return;
-  }
-
-  // Enforce approval order: Library -> Cafeteria -> Proctor -> Security
-  if (section === 'cafeteriaApproval' && (!clearance.libraryApproval.status || !clearance.departmentApproval.status)) {
-    sendError(res, 'Library and Department approvals are required before cafeteria approval', 400);
-    return;
-  }
-  if (
-    section === 'proctorApproval' &&
-    (!clearance.departmentApproval.status || !clearance.libraryApproval.status || !clearance.cafeteriaApproval.status)
-  ) {
-    sendError(res, 'Department, Library and Cafeteria approvals are required before proctor approval', 400);
-    return;
-  }
-  if (section === 'proctorApproval') {
-    // Dorm inspection must be approved before proctor approval
-    const dorm = await Dorm.findOne({ students: clearance.student }).select('_id');
-    if (!dorm) {
-      sendError(res, 'Student dorm not found for inspection', 400);
-      return;
-    }
-
-    const latestInspection = await DormInspection.findOne({ dorm: dorm._id }).sort({
-      inspectionDate: -1
-    });
-    if (!latestInspection) {
-      sendError(res, 'Dorm inspection is required before proctor approval', 400);
-      return;
-    }
-    if (!latestInspection.approved) {
-      sendError(res, 'Dorm inspection is not approved', 400);
-      return;
-    }
-    if (latestInspection.damages && latestInspection.damages.trim().length > 0) {
-      sendError(res, 'Dorm damages must be resolved before proctor approval', 400);
-      return;
-    }
-  }
-  if (
-    section === 'securityApproval' &&
-    (!clearance.libraryApproval.status ||
-      !clearance.cafeteriaApproval.status ||
-      !clearance.proctorApproval.status)
-  ) {
-    sendError(res, 'All prior approvals are required before security approval', 400);
     return;
   }
 

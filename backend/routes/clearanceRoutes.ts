@@ -27,8 +27,8 @@ router.post(
 );
 router.get('/my-clearance', authMiddleware, requireRole(['student']), getMyClearance);
 
-// Proctor routes
-router.get('/', authMiddleware, requireRole(['proctor']), getAllClearanceRequests);
+// Proctor and shared routes
+router.get('/', authMiddleware, requireRole(['proctor', 'library', 'cafeteria']), getAllClearanceRequests);
 
 // Department routes
 router.get('/department', authMiddleware, requireRole(['department']), getDepartmentClearanceRequests);
@@ -44,7 +44,7 @@ router.patch(
 router.patch(
   '/:id/library',
   authMiddleware,
-  requireRole(['proctor']),
+  requireRole(['proctor', 'library']),
   [param('id').isMongoId()],
   validationResultHandler,
   approveLibrary
@@ -53,7 +53,7 @@ router.patch(
 router.patch(
   '/:id/cafeteria',
   authMiddleware,
-  requireRole(['proctor']),
+  requireRole(['proctor', 'cafeteria']),
   [param('id').isMongoId()],
   validationResultHandler,
   approveCafeteria
