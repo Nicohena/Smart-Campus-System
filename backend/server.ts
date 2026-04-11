@@ -22,6 +22,7 @@ import navigationRoutes from './routes/navigationRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
 import chatRoutes from './routes/chatRoutes';
 import predictiveRoutes from './routes/predictiveRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -73,6 +74,7 @@ app.use('/api/navigation', navigationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/assistant', chatRoutes);
 app.use('/api/predictions', predictiveRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Global error-handling middleware (must have 4 params so Express recognises it as error handler)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
