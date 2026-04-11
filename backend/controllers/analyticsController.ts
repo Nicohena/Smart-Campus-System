@@ -141,7 +141,15 @@ export const getDepartmentAnalytics = async (req: Request, res: Response): Promi
   try {
     const departmentName = await resolveDepartmentName(req.user?.id, req.user?.department);
     if (!departmentName) {
-      sendError(res, 'No department assigned', 400);
+      // User has no department set yet — return a safe empty state instead of error
+      sendSuccess(res, 'Department analytics fetched', {
+        totalStudents: 0,
+        byYear: [],
+        activeIssuesOrComplaintsStudents: 0,
+        clearanceCompletionRate: 0,
+        completedClearances: 0,
+        totalClearances: 0
+      });
       return;
     }
 
